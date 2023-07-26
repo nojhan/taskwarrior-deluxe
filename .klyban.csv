@@ -1,0 +1,4 @@
+STATUS,ID,TITLE,DETAILS,TAG,DEADLINE
+DOING,1,print card,pretty print fixed-width cards given a content,klyban,
+TODO,2,print table,pretty print set of cards on each column,klyban,
+TODO,3,nested prints,print cards within cards,klyban,
