@@ -1,4 +1,4 @@
-,Unnamed: 0.1,Unnamed: 0,STATUS,ID,TITLE,DETAILS,TAG,DEADLINE
-0,0,0,DOING,1,print card,pretty print fixed-width cards given a content,klyban,
-1,1,1,DONE,2,print table,pretty print set of cards on each column,klyban,
-2,2,2,TODO,3,nested prints,print cards within cards,klyban,
+,Unnamed: 0.4,Unnamed: 0.3,Unnamed: 0.2,Unnamed: 0.1,Unnamed: 0,STATUS,ID,TITLE,DETAILS,TAG,DEADLINE
+0,0,0,0,0,0,DOING,1,print card,pretty print fixed-width cards given a content,klyban,
+1,1,1,1,1,1,TODO,2,print table,pretty print set of cards on each column,klyban,
+2,2,2,2,2,2,TODO,3,nested prints,print cards within cards,klyban,

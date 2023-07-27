@@ -89,7 +89,7 @@ def show(context):
 def promote(context, id):
     """Upgrade the status of task `ID` to the next one.
 
-    As configured with --status-list."""
+    Use status configured with --status-list."""
 
     df = load_data(context)
 
@@ -104,13 +104,43 @@ def promote(context, id):
         else:
             i += 1
     if i >= len(context.obj['status_list'])-1:
-        error("UNKNOWN_STATUS","Cannot promote task {}, already at the last status.".format(id))
+        error("UNKNOWN_STATUS", "Cannot promote task {}, already at the last status.".format(id))
     else:
         df.loc[df[context.obj['id_key']] == int(id), context.obj['status_key']] = context.obj['status_list'][i+1]
 
     save_data(context, df)
 
     context.invoke(show)
+
+@cli.command()
+@click.argument('ID')
+@click.pass_context
+def demote(context, id):
+    """Downgrade the status of task `ID` to the previous one.
+
+    Use status configured with --status-list."""
+
+    df = load_data(context)
+
+    row = df.loc[ df[context.obj['id_key']] == int(id) ]
+    if row.empty:
+        error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], id, context.obj['input']))
+
+    i=0
+    for i in range(len(context.obj['status_list'])):
+        if row[context.obj['status_key']][1] == context.obj['status_list'][i]:
+            break
+        else:
+            i += 1
+    if i == 0:
+        error("UNKNOWN_STATUS", "Cannot demote task {}, already at the first status.".format(id))
+    else:
+        df.loc[df[context.obj['id_key']] == int(id), context.obj['status_key']] = context.obj['status_list'][i-1]
+
+    save_data(context, df)
+
+    context.invoke(show)
+
 
 
 @cli.command()
