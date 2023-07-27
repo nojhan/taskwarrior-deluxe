@@ -1,4 +1,5 @@
 import sys
+import csv
 import json
 from configparser import ConfigParser
 
@@ -24,14 +25,15 @@ def load_data(context):
         df = pd.read_csv(fd)
         # FIXME data sanity checks: unique index, aligned status, valid dates
 
-    df.set_index(context.obj['id_key'])
+    # df.set_index(context.obj['id_key'])
     return df
 
 
 def save_data(context, df):
+    # FIXME double check that there are actually data.
     # Automagically manages standard input if input=="-", thanks to allow_dash=True.
     with click.open_file(context.obj['input'], mode='w') as fd:
-        df.to_csv(fd)
+        df.to_csv(fd, index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
 def configure(ctx, param, filename):
@@ -60,15 +62,15 @@ def configure(ctx, param, filename):
     help         = 'Read option defaults from the specified configuration file',
     show_default = True,
 )
-@click.option('-i', '--input', help="CSV data file.", default='.klyban.csv', type=click.Path(writable=True, readable=True, allow_dash=True), show_default=True)
-@click.option('--status-key', help="Header key defining the status of tasks.", default='STATUS', type=str, show_default=True)
-@click.option('--status-list', help="Comma-separated, ordered list of possible values for the status of tasks.", default='TODO,DOING,HOLD,DONE', type=str, show_default=True)
-@click.option('--id-key', help="Header key defining the unique ID of tasks.", default='ID', type=str, show_default=True)
-@click.option('--title-key', help="Header key defining the title (short description) of tasks.", default='TITLE', type=str, show_default=True)
-@click.option('--details-key', help="Header key defining the details (long description) of tasks.", default='DETAILS', type=str, show_default=True)
-@click.option('--tags-key', help="Header key defining the tags associated to tasks.", default='TAG', type=str, show_default=True)
-@click.option('--deadline-key', help="Header key defining the deadlines tasks.", default='DEADLINE', type=str, show_default=True)
-@click.option('--show-keys', help="Comman-separated, ordered list of fields that should be shown", default='ID,TITLE,DETAILS,DEADLINE,TAG', type=str, show_default=True)
+@click.option('-i', '--input' , help="CSV data file.", default='.klyban.csv', type=click.Path(writable=True, readable=True, allow_dash=True), show_default=True)
+@click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
+@click.option('--status-list' , default='TODO     ,DOING    ,HOLD              ,DONE'   , type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
+@click.option('--id-key'      , default='ID'      , type=str, show_default=True, help="Header key defining the unique ID of tasks.")
+@click.option('--title-key'   , default='TITLE'   , type=str, show_default=True, help="Header key defining the title (short description) of tasks.")
+@click.option('--details-key' , default='DETAILS' , type=str, show_default=True, help="Header key defining the details (long description) of tasks.")
+@click.option('--tags-key'    , default='TAGS'    , type=str, show_default=True, help="Header key defining the tags associated to tasks.")
+@click.option('--deadline-key', default='DEADLINE', type=str, show_default=True, help="Header key defining the deadlines tasks.")
+@click.option('--show-keys'   , default='ID,TITLE,DETAILS,DEADLINE,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown")
 @click.pass_context
 def cli(context, **kwargs):
 
@@ -112,11 +114,34 @@ def show(context):
                         msg += "cannot show field `{}`, not found in `{}` ".format(k, context.obj['input'])
                 error("INVALID_KEY", msg)
             else:
-                print(tabulate.tabulate(t, headers=context.obj['show_keys'], tablefmt="fancy_grid", showindex=False))
+                print(tabulate.tabulate(t.fillna(""), headers=context.obj['show_keys'], tablefmt="fancy_grid", showindex=False))
+
+@cli.command()
+@click.argument('TITLE', required=True, nargs=-1)
+@click.option('-d', '--details' , type=str, default="", prompt=True)
+@click.option('-t', '--tags'    , type=str, default="", prompt=True)
+@click.option('-a', '--deadline', type=str, default="", prompt=True)
+@click.option('-s', '--status'  , type=str, default='TODO')
+@click.pass_context
+def add(context, title, status, details, tags, deadline):
+    """Add a new task."""
+    df = load_data(context)
+    next_id = df[context.obj['id_key']].max() + 1
+    df.loc[next_id] = {
+        context.obj['id_key']:next_id,
+        context.obj['status_key']: status,
+        context.obj['title_key']: " ".join(title),
+        context.obj['details_key']: details,
+        context.obj['tags_key']: tags,
+        context.obj['deadline_key']: deadline,
+    }
+    save_data(context,df)
+
+    context.invoke(show)
 
 
 @cli.command()
-@click.argument('ID')
+@click.argument('ID', required=True)
 @click.pass_context
 def promote(context, id):
     """Upgrade the status of task `ID` to the next one.
@@ -146,7 +171,7 @@ def promote(context, id):
 
 
 @cli.command()
-@click.argument('ID')
+@click.argument('ID', required=True)
 @click.pass_context
 def demote(context, id):
     """Downgrade the status of task `ID` to the previous one.
