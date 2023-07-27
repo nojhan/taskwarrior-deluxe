@@ -1,4 +1,6 @@
 import sys
+import json
+from configparser import ConfigParser
 
 import pandas as pd
 import click
@@ -10,9 +12,11 @@ error_codes = {
     "UNKNOWN_STATUS": 102,
 }
 
+
 def error(id,msg):
     print(msg)
     sys.exit(error_codes[id])
+
 
 def load_data(context):
     # Automagically manages standard input if input=="-", thanks to allow_dash=True.
@@ -23,15 +27,39 @@ def load_data(context):
     df.set_index(context.obj['id_key'])
     return df
 
+
 def save_data(context, df):
     # Automagically manages standard input if input=="-", thanks to allow_dash=True.
     with click.open_file(context.obj['input'], mode='w') as fd:
         df.to_csv(fd)
 
 
+def configure(ctx, param, filename):
+    cfg = ConfigParser()
+    cfg.read(filename)
+    ctx.default_map = {}
+    for sect in cfg.sections():
+        command_path = sect.split('.')
+        if command_path[0] != 'options':
+            continue
+        defaults = ctx.default_map
+        for cmdname in command_path[1:]:
+            defaults = defaults.setdefault(cmdname, {})
+        defaults.update(cfg[sect])
+
 
 # Global group holding global options.
 @click.group()
+@click.option(
+    '-c', '--config',
+    type         = click.Path(dir_okay=False),
+    default      = '.klyban.conf',
+    callback     = configure,
+    is_eager     = True,
+    expose_value = False,
+    help         = 'Read option defaults from the specified configuration file',
+    show_default = True,
+)
 @click.option('-i', '--input', help="CSV data file.", default='.klyban.csv', type=click.Path(writable=True, readable=True, allow_dash=True), show_default=True)
 @click.option('--status-key', help="Header key defining the status of tasks.", default='STATUS', type=str, show_default=True)
 @click.option('--status-list', help="Comma-separated, ordered list of possible values for the status of tasks.", default='TODO,DOING,HOLD,DONE', type=str, show_default=True)
@@ -42,21 +70,24 @@ def save_data(context, df):
 @click.option('--deadline-key', help="Header key defining the deadlines tasks.", default='DEADLINE', type=str, show_default=True)
 @click.option('--show-keys', help="Comman-separated, ordered list of fields that should be shown", default='ID,TITLE,DETAILS,DEADLINE,TAG', type=str, show_default=True)
 @click.pass_context
-def cli(context, input, status_key, status_list, id_key, title_key, details_key, tags_key, deadline_key, show_keys):
-    # ensure that context.obj exists and is a dict (in case `cli()` is called
-    # by means other than the `if` block below)
+def cli(context, **kwargs):
+
+    # print(json.dumps(kwargs, sort_keys=True, indent=4))
+
+    # Ensure that context.obj exists and is a dict.
     context.ensure_object(dict)
-    context.obj['input'] = input
 
-    context.obj['status_key'] = status_key
-    context.obj['id_key'] = id_key
-    context.obj['title_key'] = title_key
-    context.obj['details_key'] = details_key
-    context.obj['tags_key'] = tags_key
-    context.obj['deadline_key'] = deadline_key
+    context.obj['input'] = kwargs['input']
 
-    context.obj['status_list'] = status_list.split(',')
-    context.obj['show_keys'] = show_keys.split(',')
+    context.obj['status_key'] = kwargs['status_key']
+    context.obj['id_key'] = kwargs['id_key']
+    context.obj['title_key'] = kwargs['title_key']
+    context.obj['details_key'] = kwargs['details_key']
+    context.obj['tags_key'] = kwargs['tags_key']
+    context.obj['deadline_key'] = kwargs['deadline_key']
+
+    context.obj['status_list'] = kwargs['status_list'].split(',')
+    context.obj['show_keys'] = kwargs['show_keys'].split(',')
 
 
 @cli.command()
@@ -82,6 +113,7 @@ def show(context):
                 error("INVALID_KEY", msg)
             else:
                 print(tabulate.tabulate(t, headers=context.obj['show_keys'], tablefmt="fancy_grid", showindex=False))
+
 
 @cli.command()
 @click.argument('ID')
@@ -111,6 +143,7 @@ def promote(context, id):
     save_data(context, df)
 
     context.invoke(show)
+
 
 @cli.command()
 @click.argument('ID')
@@ -142,13 +175,13 @@ def demote(context, id):
     context.invoke(show)
 
 
-
 @cli.command()
 @click.pass_context
 def config(context):
     """Show the current configuration."""
     click.echo('Configuration:')
     click.echo(f"Data file: `{context.obj['input']}`")
+
 
 if __name__ == '__main__':
     cli(obj={})
