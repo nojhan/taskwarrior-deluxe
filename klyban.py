@@ -2,8 +2,10 @@ import sys
 import csv
 import json
 import datetime
+import textwrap
 from configparser import ConfigParser
 
+import numpy as np
 import pandas as pd
 import click
 import tabulate
@@ -43,7 +45,11 @@ def load_data(context):
 
     else:
         # set index on ID.
-        df = df.astype({context.obj['id_key']:int}).set_index(context.obj['id_key'])
+        df = df.astype({context.obj['id_key']:int})
+        df = df.set_index(context.obj['id_key'])
+
+        # Remove any values consisting of empty spaces or quotes.
+        df = df.replace(r'^[\s"\']*$', np.nan, regex=True)
 
     finally:
         if context.obj['debug']:
@@ -60,6 +66,9 @@ def save_data(context, df):
 
     # Bring back ID as a regular column.
     df = df.reset_index()
+
+    # Remove any values consisting of empty spaces or quotes.
+    df = df.replace(r'^[\s"\']*$', np.nan, regex=True)
 
     # Automagically manages standard input if input=="-", thanks to allow_dash=True.
     with click.open_file(context.obj['input'], mode='w') as fd:
@@ -79,6 +88,17 @@ def configure(context, param, filename):
         for cmdname in command_path[1:]:
             defaults = defaults.setdefault(cmdname, {})
         defaults.update(cfg[sect])
+
+
+def check_id(context, param, value):
+    """Callback checking if task exists."""
+    if value is None: # For optional TID.
+        return value
+    assert(type(value) == int)
+    df = load_data(context)
+    if value not in df.index:
+        error("ID_NOT_FOUND", "{} `{}` was not found in data `{}`".format(context.obj['id_key'], value, context.obj['input']))
+    return value
 
 
 # Global group holding global options.
@@ -135,39 +155,111 @@ def cli(context, **kwargs):
 
 
 @cli.command()
+@click.argument('TID', required=False, type=int, is_eager=True, callback=check_id)
 @click.pass_context
-def show(context):
-    """Show the kanban."""
+def show(context, tid):
+    """Show a task card (if ID is passed) or the whole the kanban (else)."""
 
-    df = load_data(context)
-    if df.empty:
-        print("No task.")
-        return
+    if tid is None:
+        # Show the kanban tables.
+        df = load_data(context)
+        if df.empty:
+            print("No task.")
+            return
 
-    # Group by status.
-    tables = df.groupby(context.obj['status_key'])
-    # Loop over the asked ordered status groups.
-    for k in context.obj['status_list']: # Ordered.
-        if k in tables.groups:
-            df = tables.get_group(k)
-            # Bring back TID as a regular column.
-            df = df.reset_index()
-            # Print status as header.
-            print(k)
-            try:
-                # Print asked columns.
-                t = df[context.obj['show_keys']]
-            except KeyError as e:
-                msg = ""
-                for k in context.obj['show_keys']:
-                    if k not in df.columns:
-                        msg += "cannot show field `{}`, not found in `{}` ".format(k, context.obj['input'])
-                error("INVALID_KEY", msg)
-            else:
-                if context.obj['show_headers']:
-                    print(tabulate.tabulate(t.fillna(""), headers=context.obj['show_keys'], tablefmt="fancy_grid", showindex=False))
+        # Group by status.
+        tables = df.groupby(context.obj['status_key'])
+        # Loop over the asked ordered status groups.
+        for k in context.obj['status_list']: # Ordered.
+            if k in tables.groups:
+                df = tables.get_group(k)
+                # Bring back TID as a regular column.
+                df = df.reset_index()
+                # Print status as header.
+                print(k)
+                try:
+                    # Print asked columns.
+                    t = df[context.obj['show_keys']]
+                except KeyError as e:
+                    msg = ""
+                    for k in context.obj['show_keys']:
+                        if k not in df.columns:
+                            msg += "cannot show field `{}`, not found in `{}` ".format(k, context.obj['input'])
+                    error("INVALID_KEY", msg)
                 else:
-                    print(tabulate.tabulate(t.fillna(""), tablefmt="fancy_grid", showindex=False))
+                    if context.obj['show_headers']:
+                        print(tabulate.tabulate(t.fillna(""), headers=context.obj['show_keys'], tablefmt="fancy_grid", showindex=False))
+                    else:
+                        print(tabulate.tabulate(t.fillna(""), tablefmt="fancy_grid", showindex=False))
+
+    else: # tid is not None.
+        # Show a task card.
+        df = load_data(context)
+        row = df.loc[tid]
+
+        t_label  = ["╔", "═", "╗"]
+        t_top    = ["╟", "─", "╩", "═", "╗"]
+        t_body   = ["║", " ", "║"]
+        t_sep    = ["╟", "─", "╢"]
+        t_bottom = ["╚", "═", "╝"]
+
+        width = 30
+
+        # Label content.
+        l = []
+        if context.obj['id_key'] in context.obj['show_keys']:
+            l.append(str(tid))
+        if context.obj['title_key'] in context.obj['show_keys']:
+            l.append(row[context.obj['title_key']])
+        lbl = ":".join(l)
+        label = textwrap.shorten(lbl, width=width, placeholder="…")
+
+        # Label format.
+        card  = t_label[0] + t_label[1]*len(label) + t_label[2] + "\n"
+        card += t_body[0] + label + t_body[2] + "\n"
+        card += t_top[0] + t_top[1]*len(label) + t_top[2] + t_top[3]*(width-len(label)-1) + t_top[4] + "\n"
+
+        if context.obj['details_key'] in context.obj['show_keys']:
+            if str(row[context.obj['details_key']]) != "nan": # FIXME WTF?
+                d = row[context.obj['details_key']]
+            else:
+                d = ''
+            details = textwrap.wrap(d, width)
+            for line in details:
+                card += t_body[0] + line + t_body[1]*(width-len(line)) + t_body[2] + "\n"
+
+        if context.obj['tags_key'] in context.obj['show_keys']:
+            card += t_sep[0] + t_sep[1]*width + t_sep[2] + "\n"
+            if str(row[context.obj['tags_key']]) != "nan": # FIXME WTF?
+                t = row[context.obj['tags_key']]
+            else:
+                t = ''
+            tags = textwrap.wrap(t, width)
+            for line in tags:
+                card += t_body[0] + line + t_body[1]*(width-len(line)) + t_body[2] + "\n"
+
+        if context.obj['deadline_key'] in context.obj['show_keys']:
+            card += t_sep[0] + t_sep[1]*width + t_sep[2] + "\n"
+            if str(row[context.obj['deadline_key']]) != "nan": # FIXME WTF?
+                t = row[context.obj['deadline_key']]
+            else:
+                t = ''
+            deadline = textwrap.wrap(t, width)
+            for line in deadline:
+                card += t_body[0] + line + t_body[1]*(width-len(line)) + t_body[2] + "\n"
+
+        if context.obj['touched_key'] in context.obj['show_keys']:
+            card += t_sep[0] + t_sep[1]*width + t_sep[2] + "\n"
+            if str(row[context.obj['touched_key']]) != "nan": # FIXME WTF?
+                t = row[context.obj['touched_key']]
+            else:
+                t = ''
+            touched = textwrap.wrap(t, width)
+            for line in touched:
+                card += t_body[0] + line + t_body[1]*(width-len(line)) + t_body[2] + "\n"
+
+        card += t_bottom[0] + t_bottom[1]*width + t_bottom[2] # No newline.
+        print(card)
 
 
 @cli.command()
@@ -192,21 +284,11 @@ def add(context, title, status, details, tags, deadline):
         context.obj['deadline_key']: deadline,
         context.obj['touched_key']: datetime.datetime.now().isoformat(),
     })
-    # Remove any values consisting of empty spaces or quotes.
-    df = df.replace(r'^[\s"\']*$', float("nan"), regex=True)
 
     save_data(context,df)
 
     context.invoke(show)
 
-
-def check_id(context, param, value):
-    """Callback checking if task exists."""
-    assert(type(value) == int)
-    df = load_data(context)
-    if value not in df.index:
-        error("ID_NOT_FOUND", "{} `{}` was not found in data `{}`".format(context.obj['id_key'], value, context.obj['input']))
-    return value
 
 @cli.command()
 @click.argument('TID', required=True, type=int, is_eager=True, callback=check_id)
