@@ -38,14 +38,18 @@ def load_data(context):
             context.obj['deadline_key'],
             context.obj['touched_key'],
         ])
+        df = df.set_index(context.obj['id_key'])
         save_data(context, df)
 
-    # set index on TID.
-    df = df.astype({context.obj['id_key']:int}).set_index(context.obj['id_key'])
-    if context.obj['debug']:
-        print("Loaded:")
-        print(df)
-    return df
+    else:
+        # set index on ID.
+        df = df.astype({context.obj['id_key']:int}).set_index(context.obj['id_key'])
+
+    finally:
+        if context.obj['debug']:
+            print("Loaded:")
+            print(df)
+        return df
 
 
 def save_data(context, df):
@@ -54,7 +58,7 @@ def save_data(context, df):
         print(df)
     # FIXME double check that there are actually data.
 
-    # Bring back TID as a regular column.
+    # Bring back ID as a regular column.
     df = df.reset_index()
 
     # Automagically manages standard input if input=="-", thanks to allow_dash=True.
@@ -87,7 +91,7 @@ def configure(context, param, filename):
     callback     = configure,
     is_eager     = True,
     expose_value = False,
-    help         = 'Read option defaults from the specified configuration file',
+    help         = 'Read option defaults from the specified configuration file.',
     show_default = True,
 )
 @click.option('-i', '--input' , help="CSV data file.", default='.klyban.csv', type=click.Path(writable=True, readable=True, allow_dash=True), show_default=True)
@@ -176,7 +180,10 @@ def show(context):
 def add(context, title, status, details, tags, deadline):
     """Add a new task."""
     df = load_data(context)
-    next_id = df.index.max() + 1
+    if df.index.empty:
+        next_id = 0
+    else:
+        next_id = df.index.max() + 1
     df.loc[next_id] = pd.Series({
         context.obj['status_key']: status,
         context.obj['title_key']: " ".join(title),
@@ -246,17 +253,49 @@ def delete(context, tid):
     context.invoke(show)
 
 
+
+def change_status(context, tid, new_status):
+    """Edit the status of a task."""
+    df = load_data(context)
+
+    row = df.loc[tid]
+    if row.empty:
+        error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], tid, context.obj['input']))
+
+    if new_status not in context.obj['status_list']:
+        error("UNKNOWN_STATUS", "Unknown status `{}`".format(new_status))
+    else:
+        df.loc[tid, context.obj['status_key']] = new_status
+        df.loc[tid, context.obj['touched_key']] = datetime.datetime.now().isoformat()
+
+    save_data(context, df)
+
+
 @cli.command()
-@click.argument('TID', required=True, type=int)
+@click.argument('TID', required=True, type=int, is_eager=True, callback=check_id)
+@click.argument('STATUS', required=True, type=str)
+@click.pass_context
+def status(context, tid, status):
+    """Explicitely change the status of a task.
+
+    Use status names configured with --status-list."""
+
+    change_status(context, tid, status)
+
+    context.invoke(show)
+
+
+@cli.command()
+@click.argument('TID', required=True, type=int, is_eager=True, callback=check_id)
 @click.pass_context
 def promote(context, tid):
-    """Upgrade the status of task `TID` to the next one.
+    """Upgrade the status of a task to the next one.
 
     Use status names configured with --status-list."""
 
     df = load_data(context)
 
-    row = df.loc[ df[context.obj['id_key']] == tid ]
+    row = df.loc[tid]
     if row.empty:
         error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], tid, context.obj['input']))
 
@@ -269,25 +308,22 @@ def promote(context, tid):
     if i >= len(context.obj['status_list'])-1:
         error("UNKNOWN_STATUS", "Cannot promote task {}, already at the last status.".format(tid))
     else:
-        df.loc[df[context.obj['id_key']] == tid, context.obj['status_key']] = context.obj['status_list'][i+1]
-        df.loc[df[context.obj['id_key']] == tid, context.obj['touched_key']] = datetime.datetime.now().isoformat()
-
-    save_data(context, df)
+        change_status(context, tid, context.obj['status_list'][i+1])
 
     context.invoke(show)
 
 
 @cli.command()
-@click.argument('TID', required=True, type=int)
+@click.argument('TID', required=True, type=int, is_eager=True, callback=check_id)
 @click.pass_context
 def demote(context, tid):
-    """Downgrade the status of task `TID` to the previous one.
+    """Downgrade the status of a task to the previous one.
 
     Use status names configured with --status-list."""
 
     df = load_data(context)
 
-    row = df.loc[ df[context.obj['id_key']] == tid ]
+    row = df.loc[tid]
     if row.empty:
         error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], tid, context.obj['input']))
 
@@ -300,10 +336,7 @@ def demote(context, tid):
     if i == 0:
         error("UNKNOWN_STATUS", "Cannot demote task {}, already at the first status.".format(tid))
     else:
-        df.loc[df[context.obj['id_key']] == tid, context.obj['status_key']] = context.obj['status_list'][i-1]
-        df.loc[df[context.obj['id_key']] == tid, context.obj['touched_key']] = datetime.datetime.now().isoformat()
-
-    save_data(context, df)
+        change_status(context, tid, context.obj['status_list'][i-1])
 
     context.invoke(show)
 
