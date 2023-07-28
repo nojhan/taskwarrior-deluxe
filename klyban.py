@@ -117,6 +117,7 @@ def check_id(context, param, value):
 @click.option('-i', '--input' , help="CSV data file.", default='.klyban.csv', type=click.Path(writable=True, readable=True, allow_dash=True), show_default=True)
 # Display options.
 @click.option('-H','--show-headers', is_flag=True, help="Show the headers.")
+@click.option('-S', '--show-keys'   , default='ID,TITLE,DETAILS,DEADLINE,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
 @click.option('--status-list' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
@@ -126,7 +127,6 @@ def check_id(context, param, value):
 @click.option('--tags-key'    , default='TAGS'    , type=str, show_default=True, help="Header key defining the tags associated to tasks.")
 @click.option('--deadline-key', default='DEADLINE', type=str, show_default=True, help="Header key defining the deadlines tasks.")
 @click.option('--touched-key', default='TOUCHED', type=str, show_default=True, help="Header key defining the deadlines tasks.")
-@click.option('--show-keys'   , default='ID,TITLE,DETAILS,DEADLINE,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown")
 @click.option('--debug', is_flag=True, help="Print debugging information.")
 @click.pass_context
 def cli(context, **kwargs):
@@ -149,7 +149,18 @@ def cli(context, **kwargs):
     context.obj['touched_key'] = kwargs['touched_key']
 
     context.obj['status_list'] = kwargs['status_list'].split(',')
-    context.obj['show_keys'] = kwargs['show_keys'].split(',')
+    if kwargs['show_keys'].lower() == "all":
+        context.obj['show_keys'] = [
+            context.obj['id_key'],
+            context.obj['status_key'],
+            context.obj['title_key'],
+            context.obj['details_key'],
+            context.obj['tags_key'],
+            context.obj['deadline_key'],
+            context.obj['touched_key'],
+        ]
+    else:
+        context.obj['show_keys'] = kwargs['show_keys'].split(',')
 
     context.obj['debug'] = kwargs['debug']
 
@@ -203,7 +214,7 @@ def show(context, tid):
         t_sep    = ["╟", "─", "╢"]
         t_bottom = ["╚", "═", "╝"]
 
-        width = 30
+        width = len(datetime.datetime.now().isoformat())
 
         # Label content.
         l = []
