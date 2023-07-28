@@ -101,6 +101,7 @@ def check_id(context, param, value):
     return value
 
 
+
 # Global group holding global options.
 @click.group(invoke_without_command=True)
 # Core options.
@@ -304,14 +305,28 @@ def add(context, title, status, details, tags, deadline):
     context.invoke(show)
 
 
+def default_from_existing(key):
+    class OptionDefaultFromContext(click.Option):
+        def get_default(self, context):
+            tid = context.params['tid']
+            df = load_data(context)
+            assert(tid in df.index)
+            row = df.loc[tid]
+            value = row[context.obj[key]]
+            if str(value) != "nan": # FIXME WTF?
+                self.default = value
+            else:
+                self.default = ""
+            return super(OptionDefaultFromContext, self).get_default(context)
+    return OptionDefaultFromContext
+
 @cli.command()
 @click.argument('TID', required=True, type=int, is_eager=True, callback=check_id)
-@click.option('-t', '--title'   , type=str, prompt=True)
-@click.option('-s', '--status'  , type=str, prompt=True)
-@click.option('-d', '--details' , type=str, prompt=True, default="")
-@click.option('-t', '--tags'    , type=str, prompt=True, default="")
-@click.option('-a', '--deadline', type=str, prompt=True, default="")
-# FIXME populate the defaults with the existing data.
+@click.option('-t', '--title'   , type=str, prompt=True, cls = default_from_existing('title_key'))
+@click.option('-s', '--status'  , type=str, prompt=True, cls = default_from_existing('status_key'))
+@click.option('-d', '--details' , type=str, prompt=True, cls = default_from_existing('details_key'))
+@click.option('-t', '--tags'    , type=str, prompt=True, cls = default_from_existing('tags_key'))
+@click.option('-a', '--deadline', type=str, prompt=True, cls = default_from_existing('deadline_key'))
 @click.pass_context
 def edit(context, tid, title, status, details, tags, deadline):
     """Add a new task."""

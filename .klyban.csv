@@ -1,5 +1,5 @@
 "ID","STATUS","TITLE","DETAILS","TAGS","DEADLINE","TOUCHED"
-0,"TODO","Use click-option-group","To help sort options in categories in help.","","","2023-07-28T12:04:02.615501"
+0,"TODO","Use click-option-group","To help sort options in categories in help.","UX","","2023-07-28T23:07:24.677746"
 1,"TODO","Use click-aliases","To allow for aliases (TBC: user-defined in config file?)","UX","","2023-07-28T17:10:35.635275"
-2,"TODO","edit existing","When calling edit, populate defaults with existing data.","","","2023-07-28T12:07:08.177802"
+2,"DONE","edit existing","When calling edit, populate defaults with existing data.","","","2023-07-28T23:08:18.324797"
 3,"TODO","sanity checks","Check data consistency in load_data and save_data.","","","2023-07-28T12:08:10.272349"
