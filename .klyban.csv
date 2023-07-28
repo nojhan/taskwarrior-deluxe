@@ -3,3 +3,4 @@
 1,"TODO","Use click-aliases","To allow for aliases (TBC: user-defined in config file?)","UX","","2023-07-28T17:10:35.635275"
 2,"DONE","edit existing","When calling edit, populate defaults with existing data.","","","2023-07-28T23:08:18.324797"
 3,"TODO","sanity checks","Check data consistency in load_data and save_data.","","","2023-07-28T12:08:10.272349"
+4,"TODO","find csv up dir","Try to find .klyban.csv on upper directories if not in the existing one.","data","","2023-07-28T23:12:23.467603"
