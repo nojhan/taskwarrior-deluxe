@@ -102,7 +102,7 @@ def check_id(context, param, value):
 
 
 # Global group holding global options.
-@click.group()
+@click.group(invoke_without_command=True)
 # Core options.
 @click.option(
     '-c', '--config',
@@ -163,6 +163,9 @@ def cli(context, **kwargs):
         context.obj['show_keys'] = kwargs['show_keys'].split(',')
 
     context.obj['debug'] = kwargs['debug']
+
+    if not context.invoked_subcommand:
+        context.invoke(show)
 
 
 @cli.command()
