@@ -13,6 +13,7 @@ import rich.console as richconsole
 from rich.table import Table
 from rich.text import Text
 from rich.panel import Panel
+from rich.columns import Columns
 from rich import box
 
 
@@ -229,13 +230,31 @@ def show(context, tid):
         df = context.obj['data']
         row = df.loc[tid]
 
-        t_label  = ["╔", "═", "╗"]
-        t_top    = ["╟", "─", "╩", "═", "╗"]
-        t_body   = ["║", " ", "║"]
-        t_sep    = ["╟", "─", "╢"]
-        t_bottom = ["╚", "═", "╝"]
+        console = richconsole.Console()
 
-        width = len(datetime.datetime.now().isoformat())
+        table = Table(box = None, show_header = False)
+        table.add_column("Task")
+
+        def add_row_text(table, key, icon = ''):
+            if context.obj[key] in context.obj['show_keys']:
+                if str(row[context.obj[key]]) != "nan": # FIXME WTF?
+                    table.add_row(icon + row[context.obj[key]])
+                else:
+                    return
+
+        def add_row_list(table, key = context.obj['tags_key'], icon = ''):
+            if context.obj[key] in context.obj['show_keys']:
+                if str(row[context.obj[key]]) != "nan": # FIXME WTF?
+                    tags = [icon+t for t in row[context.obj[key]].split(',')]
+                    columns = Columns(tags, expand = False)
+                    table.add_row(columns)
+                else:
+                    return
+
+        add_row_text(table, 'details_key')
+        add_row_list(table, 'tags_key', '🏷 ')
+        add_row_text(table, 'deadline_key', '🗓')
+        add_row_text(table, 'touched_key', ':calendar-text:')
 
         # Label content.
         l = []
@@ -243,55 +262,11 @@ def show(context, tid):
             l.append(str(tid))
         if context.obj['title_key'] in context.obj['show_keys']:
             l.append(row[context.obj['title_key']])
-        lbl = ":".join(l)
-        label = textwrap.shorten(lbl, width=width, placeholder="…")
+        label = ": ".join(l)
 
-        # Label format.
-        card  = t_label[0] + t_label[1]*len(label) + t_label[2] + "\n"
-        card += t_body[0] + label + t_body[2] + "\n"
-        card += t_top[0] + t_top[1]*len(label) + t_top[2] + t_top[3]*(width-len(label)-1) + t_top[4] + "\n"
+        panel = Panel.fit(table, title = label, title_align="left")
+        console.print(panel)
 
-        if context.obj['details_key'] in context.obj['show_keys']:
-            if str(row[context.obj['details_key']]) != "nan": # FIXME WTF?
-                d = row[context.obj['details_key']]
-            else:
-                d = ''
-            details = textwrap.wrap(d, width)
-            for line in details:
-                card += t_body[0] + line + t_body[1]*(width-len(line)) + t_body[2] + "\n"
-
-        if context.obj['tags_key'] in context.obj['show_keys']:
-            card += t_sep[0] + t_sep[1]*width + t_sep[2] + "\n"
-            if str(row[context.obj['tags_key']]) != "nan": # FIXME WTF?
-                t = row[context.obj['tags_key']]
-            else:
-                t = ''
-            tags = textwrap.wrap(t, width)
-            for line in tags:
-                card += t_body[0] + line + t_body[1]*(width-len(line)) + t_body[2] + "\n"
-
-        if context.obj['deadline_key'] in context.obj['show_keys']:
-            card += t_sep[0] + t_sep[1]*width + t_sep[2] + "\n"
-            if str(row[context.obj['deadline_key']]) != "nan": # FIXME WTF?
-                t = row[context.obj['deadline_key']]
-            else:
-                t = ''
-            deadline = textwrap.wrap(t, width)
-            for line in deadline:
-                card += t_body[0] + line + t_body[1]*(width-len(line)) + t_body[2] + "\n"
-
-        if context.obj['touched_key'] in context.obj['show_keys']:
-            card += t_sep[0] + t_sep[1]*width + t_sep[2] + "\n"
-            if str(row[context.obj['touched_key']]) != "nan": # FIXME WTF?
-                t = row[context.obj['touched_key']]
-            else:
-                t = ''
-            touched = textwrap.wrap(t, width)
-            for line in touched:
-                card += t_body[0] + line + t_body[1]*(width-len(line)) + t_body[2] + "\n"
-
-        card += t_bottom[0] + t_bottom[1]*width + t_bottom[2] # No newline.
-        print(card)
 
 
 @cli.command()
