@@ -4,3 +4,8 @@
 2,"DONE","edit existing","When calling edit, populate defaults with existing data.","","","2023-07-28T23:08:18.324797"
 3,"TODO","sanity checks","Check data consistency in load_data and save_data.","","","2023-07-28T12:08:10.272349"
 4,"TODO","find csv up dir","Try to find .klyban.csv on upper directories if not in the existing one.","data","","2023-07-28T23:12:23.467603"
+5,"TODO","semantic tags","Allow tags starting with # to refer to a Github issue if data file is in a git repository having a remote on Github.","github","","2023-07-29T15:44:37.854535"
+6,"TODO","style metadata","Add a METADATA column to host styling tags.","","","2023-07-29T15:45:42.414295"
+9,"TODO","fix add","'add' should prompt for columns content.","","","2023-07-29T15:47:01.948986"
+10,"TODO","fix delete","'delete' print the kanban not updated","","","2023-07-29T15:47:54.063379"
+11,"TODO","fix quotes","After 'add', empty columns got remaining quotes.","","","2023-07-29T15:48:48.804824"
