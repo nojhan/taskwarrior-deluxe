@@ -165,6 +165,10 @@ def cli(context, **kwargs):
 
     context.obj['debug'] = kwargs['debug']
 
+    # At the end, always load data, whatever the command will be.
+    context.obj['data'] = load_data(context)
+
+    # If no command: defaults to `show`.
     if not context.invoked_subcommand:
         context.invoke(show)
 
@@ -177,7 +181,7 @@ def show(context, tid):
 
     if tid is None:
         # Show the kanban tables.
-        df = load_data(context)
+        df = context.obj['data']
         if df.empty:
             print("No task.")
             return
@@ -209,7 +213,7 @@ def show(context, tid):
 
     else: # tid is not None.
         # Show a task card.
-        df = load_data(context)
+        df = context.obj['data']
         row = df.loc[tid]
 
         t_label  = ["╔", "═", "╗"]
@@ -286,7 +290,7 @@ def show(context, tid):
 @click.pass_context
 def add(context, title, status, details, tags, deadline):
     """Add a new task."""
-    df = load_data(context)
+    df = context.obj['data']
     if df.index.empty:
         next_id = 0
     else:
@@ -309,7 +313,7 @@ def default_from_existing(key):
     class OptionDefaultFromContext(click.Option):
         def get_default(self, context):
             tid = context.params['tid']
-            df = load_data(context)
+            df = context.obj['data']
             assert(tid in df.index)
             row = df.loc[tid]
             value = row[context.obj[key]]
@@ -330,7 +334,7 @@ def default_from_existing(key):
 @click.pass_context
 def edit(context, tid, title, status, details, tags, deadline):
     """Add a new task."""
-    df = load_data(context)
+    df = context.obj['data']
     assert(tid in df.index)
     df.loc[tid] = pd.Series({
             context.obj['status_key']: status,
@@ -357,7 +361,7 @@ def check_yes(context, param, value):
 @click.pass_context
 def delete(context, tid):
     """Delete a task."""
-    df = load_data(context)
+    df = context.obj['data']
     df = df.drop(index=tid)
     save_data(context, df)
 
@@ -367,7 +371,7 @@ def delete(context, tid):
 
 def change_status(context, tid, new_status):
     """Edit the status of a task."""
-    df = load_data(context)
+    df = context.obj['data']
 
     row = df.loc[tid]
     if row.empty:
@@ -404,7 +408,7 @@ def promote(context, tid):
 
     Use status names configured with --status-list."""
 
-    df = load_data(context)
+    df = context.obj['data']
 
     row = df.loc[tid]
     if row.empty:
@@ -432,7 +436,7 @@ def demote(context, tid):
 
     Use status names configured with --status-list."""
 
-    df = load_data(context)
+    df = context.obj['data']
 
     row = df.loc[tid]
     if row.empty:
