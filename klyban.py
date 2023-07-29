@@ -8,7 +8,13 @@ from configparser import ConfigParser
 import numpy as np
 import pandas as pd
 import click
-import tabulate
+# import tabulate
+import rich.console as richconsole
+from rich.table import Table
+from rich.text import Text
+from rich.panel import Panel
+from rich import box
+
 
 error_codes = {
     "INVALID_KEY": 100,
@@ -118,7 +124,7 @@ def check_id(context, param, value):
 @click.option('-i', '--input' , help="CSV data file.", default='.klyban.csv', type=click.Path(writable=True, readable=True, allow_dash=True), show_default=True)
 # Display options.
 @click.option('-H','--show-headers', is_flag=True, help="Show the headers.")
-@click.option('-S', '--show-keys'   , default='ID,TITLE,DETAILS,DEADLINE,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
+@click.option('-S', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
 @click.option('--status-list' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
@@ -189,27 +195,34 @@ def show(context, tid):
         # Group by status.
         tables = df.groupby(context.obj['status_key'])
         # Loop over the asked ordered status groups.
-        for k in context.obj['status_list']: # Ordered.
-            if k in tables.groups:
-                df = tables.get_group(k)
+        for section in context.obj['status_list']: # Ordered.
+            if section in tables.groups:
+                df = tables.get_group(section)
                 # Bring back TID as a regular column.
-                df = df.reset_index()
-                # Print status as header.
-                print(k)
+                df = df.reset_index().fillna("")
                 try:
                     # Print asked columns.
                     t = df[context.obj['show_keys']]
                 except KeyError as e:
                     msg = ""
-                    for k in context.obj['show_keys']:
-                        if k not in df.columns:
-                            msg += "cannot show field `{}`, not found in `{}` ".format(k, context.obj['input'])
+                    for section in context.obj['show_keys']:
+                        if section not in df.columns:
+                            msg += "cannot show field `{}`, not found in `{}` ".format(section, context.obj['input'])
                     error("INVALID_KEY", msg)
                 else:
-                    if context.obj['show_headers']:
-                        print(tabulate.tabulate(t.fillna(""), headers=context.obj['show_keys'], tablefmt="fancy_grid", showindex=False))
-                    else:
-                        print(tabulate.tabulate(t.fillna(""), tablefmt="fancy_grid", showindex=False))
+                    console = richconsole.Console()
+                    # table = Table(show_header = context.obj['show_headers'], row_styles=["color(39)","color(33)"], box = None)
+                    table = Table(show_header = context.obj['show_headers'], box = None)
+                    for h in context.obj['show_keys']:
+                        table.add_column(h)
+                    for i,row in t.iterrows():
+                        items = (str(row[k]) for k in context.obj['show_keys'])
+                        table.add_row(*items)
+                    # console.print(table)
+                    # panel = Panel.fit(table, title = section, title_align="left", border_style="bold blue")
+                    panel = Panel.fit(table, title = section, title_align="left")
+                    console.print(panel)
+
 
     else: # tid is not None.
         # Show a task card.
