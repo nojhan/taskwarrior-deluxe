@@ -186,9 +186,12 @@ def cli(context, **kwargs):
 def show(context, tid):
     """Show a task card (if ID is passed) or the whole the kanban (else)."""
 
+    # Because commands invoked before may alter the table,
+    # we need to reload the data.
+    df = load_data(context)
+
     if tid is None:
         # Show the kanban tables.
-        df = context.obj['data']
         if df.empty:
             print("No task.")
             return
@@ -227,7 +230,6 @@ def show(context, tid):
 
     else: # tid is not None.
         # Show a task card.
-        df = context.obj['data']
         row = df.loc[tid]
 
         console = richconsole.Console()

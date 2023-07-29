@@ -7,6 +7,5 @@
 5,"TODO","semantic tags","Allow tags starting with # to refer to a Github issue if data file is in a git repository having a remote on Github.","github","","2023-07-29T15:44:37.854535"
 6,"TODO","style metadata","Add a METADATA column to host styling tags.","","","2023-07-29T15:45:42.414295"
 9,"TODO","fix add","'add' should prompt for columns content.","","","2023-07-29T15:47:01.948986"
-10,"TODO","fix delete","'delete' print the kanban not updated","","","2023-07-29T15:47:54.063379"
+10,"DONE","fix delete","'delete' print the kanban not updated","","","2023-07-29T17:46:23.078957"
 11,"TODO","fix quotes","After 'add', empty columns got remaining quotes.","","","2023-07-29T15:48:48.804824"
-12,"TODO","test","","UX,data,git,core,code,meta,shit,fuck","","2023-07-29T17:32:18.081371"
