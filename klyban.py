@@ -9,11 +9,12 @@ import numpy as np
 import pandas as pd
 import click
 # import tabulate
-import rich.console as richconsole
+import rich.console as rconsole
 from rich.table import Table
 from rich.text import Text
 from rich.panel import Panel
 from rich.columns import Columns
+from rich.theme import Theme
 from rich import box
 
 
@@ -132,6 +133,8 @@ def check_id(context, param, value):
 @click.option('-H','--show-headers', is_flag=True, help="Show the headers.")
 @click.option('-S', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
 @click.option('-G', '--highlight', type = int, default = None, help="Highlight a specific task.")
+@click.option('-L', '--layout', type = click.Choice(['vertical-compact']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'vertical-fancy', 'horizontal-compact', 'horizontal-fancy'
+@click.option('-T', '--theme', type = click.Choice(['none', 'user', 'wb', 'blues', 'reds', 'greens'], case_sensitive=False), default = 'none', help="How to display tasks.")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
 @click.option('--status-list' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
@@ -152,9 +155,6 @@ def cli(context, **kwargs):
 
     context.obj['input'] = kwargs['input']
 
-    context.obj['show_headers'] = kwargs['show_headers']
-    context.obj['highlight'] = kwargs['highlight']
-
     context.obj['id_key'] = kwargs['id_key']
     context.obj['status_key'] = kwargs['status_key']
     context.obj['title_key'] = kwargs['title_key']
@@ -162,6 +162,40 @@ def cli(context, **kwargs):
     context.obj['tags_key'] = kwargs['tags_key']
     context.obj['deadline_key'] = kwargs['deadline_key']
     context.obj['touched_key'] = kwargs['touched_key']
+
+    context.obj['show_headers'] = kwargs['show_headers']
+    context.obj['highlight'] = kwargs['highlight']
+    context.obj['layout'] = kwargs['layout']
+    context.obj['layouts'] = {
+        'vertical-compact': VerticalCompact,
+    }
+    context.obj['themes'] = {
+        'none': Theme({
+            'H': '',
+            context.obj['id_key']: '',
+            context.obj['status_key']: '',
+            context.obj['title_key']: '',
+            context.obj['details_key']: '',
+            context.obj['tags_key']: '',
+            context.obj['deadline_key']: '',
+            context.obj['touched_key']: '',
+            'row_odd': '',
+            'row_even': '',
+        }),
+        'wb': Theme({
+            'H': '',
+            context.obj['id_key']: 'white',
+            context.obj['status_key']: '',
+            context.obj['title_key']: 'bold white',
+            context.obj['details_key']: '',
+            context.obj['tags_key']: 'italic',
+            context.obj['deadline_key']: '',
+            context.obj['touched_key']: 'color(240)',
+            'row_odd': 'on color(234)',
+            'row_even': 'on color(235)',
+        })
+    }
+    context.obj['theme'] = context.obj['themes'][kwargs['theme']]
 
     context.obj['status_list'] = kwargs['status_list'].split(',')
     if kwargs['show_keys'].lower() == "all":
@@ -185,9 +219,53 @@ def cli(context, **kwargs):
     # At the end, always load data, whatever the command will be.
     context.obj['data'] = load_data(context)
 
-    # If no command: defaults to `show`.
+    # Finally, if no command: defaults to `show`.
     if not context.invoked_subcommand:
         context.invoke(show)
+
+
+class Layout:
+    def __init__(self, context):
+        self.context = context
+
+class VerticalCompact(Layout):
+    def __rich__(self):
+        df = self.context.obj['data']
+
+        # Show the kanban tables.
+        if df.empty:
+            return "No task."
+
+        panels = []
+
+        # Group by status.
+        tables = df.groupby(self.context.obj['status_key'])
+        # Loop over the asked ordered status groups.
+        for section in self.context.obj['status_list']: # Ordered.
+            if section in tables.groups:
+                df = tables.get_group(section)
+                # Bring back TID as a regular column.
+                df = df.reset_index().fillna("")
+                try:
+                    # Print asked columns.
+                    t = df[self.context.obj['show_keys']]
+                except KeyError as e:
+                    msg = ""
+                    for section in self.context.obj['show_keys']:
+                        if section not in df.columns:
+                            msg += "cannot show field `{}`, not found in `{}` ".format(section, self.context.obj['input'])
+                    error("INVALID_KEY", msg)
+                else:
+                    table = Table(show_header = self.context.obj['show_headers'], box = None, row_styles = ['row_odd', 'row_even'], expand = True)
+                    for h in self.context.obj['show_keys']:
+                        table.add_column(h, style = h)
+                    for i,row in t.iterrows():
+                        items = (str(row[k]) for k in self.context.obj['show_keys'])
+                        table.add_row(*items)
+                    panel = Panel.fit(table, title = section, title_align="left")
+                    panels.append(panel)
+
+        return rconsole.Group(*panels)
 
 
 @cli.command()
@@ -201,51 +279,20 @@ def show(context, tid):
     df = load_data(context)
 
     if tid is None:
-        # Show the kanban tables.
-        if df.empty:
-            print("No task.")
-            return
 
         if context.obj['highlight'] is not None:
             df.loc[context.obj['highlight'], 'H'] = ':arrow_forward:'
 
-        # Group by status.
-        tables = df.groupby(context.obj['status_key'])
-        # Loop over the asked ordered status groups.
-        for section in context.obj['status_list']: # Ordered.
-            if section in tables.groups:
-                df = tables.get_group(section)
-                # Bring back TID as a regular column.
-                df = df.reset_index().fillna("")
-                try:
-                    # Print asked columns.
-                    t = df[context.obj['show_keys']]
-                except KeyError as e:
-                    msg = ""
-                    for section in context.obj['show_keys']:
-                        if section not in df.columns:
-                            msg += "cannot show field `{}`, not found in `{}` ".format(section, context.obj['input'])
-                    error("INVALID_KEY", msg)
-                else:
-                    console = richconsole.Console()
-                    # table = Table(show_header = context.obj['show_headers'], row_styles=["color(39)","color(33)"], box = None)
-                    table = Table(show_header = context.obj['show_headers'], box = None)
-                    for h in context.obj['show_keys']:
-                        table.add_column(h)
-                    for i,row in t.iterrows():
-                        items = (str(row[k]) for k in context.obj['show_keys'])
-                        table.add_row(*items)
-                    # console.print(table)
-                    # panel = Panel.fit(table, title = section, title_align="left", border_style="bold blue")
-                    panel = Panel.fit(table, title = section, title_align="left")
-                    console.print(panel)
+        layout = context.obj['layouts'][context.obj['layout']](context)
+        console = rconsole.Console(theme = context.obj['theme'])
+        console.print(layout)
 
 
     else: # tid is not None.
         # Show a task card.
         row = df.loc[tid]
 
-        console = richconsole.Console()
+        console = rconsole.Console()
 
         table = Table(box = None, show_header = False)
         table.add_column("Task")
