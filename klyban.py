@@ -59,6 +59,8 @@ def load_data(context):
         df = df.replace(r'^[\s"\']*$', np.nan, regex=True)
 
     finally:
+        # Virtual "hints" column.
+        df['H'] = ''
         if context.obj['debug']:
             print("Loaded:")
             print(df)
@@ -70,6 +72,9 @@ def save_data(context, df):
         print("Save:")
         print(df)
     # FIXME double check that there are actually data.
+
+    # Remove the virtual "hints" column.
+    df = df.drop('H', axis = 1)
 
     # Bring back ID as a regular column.
     df = df.reset_index()
@@ -126,6 +131,7 @@ def check_id(context, param, value):
 # Display options.
 @click.option('-H','--show-headers', is_flag=True, help="Show the headers.")
 @click.option('-S', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
+@click.option('-G', '--highlight', type = int, default = None, help="Highlight a specific task.")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
 @click.option('--status-list' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
@@ -147,6 +153,7 @@ def cli(context, **kwargs):
     context.obj['input'] = kwargs['input']
 
     context.obj['show_headers'] = kwargs['show_headers']
+    context.obj['highlight'] = kwargs['highlight']
 
     context.obj['id_key'] = kwargs['id_key']
     context.obj['status_key'] = kwargs['status_key']
@@ -169,6 +176,9 @@ def cli(context, **kwargs):
         ]
     else:
         context.obj['show_keys'] = kwargs['show_keys'].split(',')
+
+    # Always show the 'Hint' column.
+    context.obj['show_keys'] = ['H'] + context.obj['show_keys']
 
     context.obj['debug'] = kwargs['debug']
 
@@ -195,6 +205,9 @@ def show(context, tid):
         if df.empty:
             print("No task.")
             return
+
+        if context.obj['highlight'] is not None:
+            df.loc[context.obj['highlight'], 'H'] = ':arrow_forward:'
 
         # Group by status.
         tables = df.groupby(context.obj['status_key'])
@@ -273,9 +286,9 @@ def show(context, tid):
 
 @cli.command()
 @click.argument('TITLE', required=True, nargs=-1)
-@click.option('-d', '--details' , type=str, default=None, prompt=True)
-@click.option('-t', '--tags'    , type=str, default=None, prompt=True)
-@click.option('-a', '--deadline', type=str, default=None, prompt=True)
+@click.option('-d', '--details' , type=str, prompt=True)
+@click.option('-t', '--tags'    , type=str, prompt=True)
+@click.option('-a', '--deadline', type=str, prompt=True)
 @click.option('-s', '--status'  , type=str, default='TODO')
 @click.pass_context
 def add(context, title, status, details, tags, deadline):
@@ -285,6 +298,7 @@ def add(context, title, status, details, tags, deadline):
         next_id = 0
     else:
         next_id = df.index.max() + 1
+
     df.loc[next_id] = pd.Series({
         context.obj['status_key']: status,
         context.obj['title_key']: " ".join(title),
@@ -296,6 +310,7 @@ def add(context, title, status, details, tags, deadline):
 
     save_data(context,df)
 
+    context.obj['highlight'] = next_id
     context.invoke(show)
 
 
@@ -336,6 +351,7 @@ def edit(context, tid, title, status, details, tags, deadline):
         })
     save_data(context,df)
 
+    context.obj['highlight'] = tid
     context.invoke(show)
 
 
@@ -387,6 +403,7 @@ def status(context, tid, status):
 
     change_status(context, tid, status)
 
+    context.obj['highlight'] = tid
     context.invoke(show)
 
 
@@ -406,7 +423,7 @@ def promote(context, tid):
 
     i=0
     for i in range(len(context.obj['status_list'])):
-        if row[context.obj['status_key']][1] == context.obj['status_list'][i]:
+        if row[context.obj['status_key']] == context.obj['status_list'][i]:
             break
         else:
             i += 1
@@ -415,6 +432,7 @@ def promote(context, tid):
     else:
         change_status(context, tid, context.obj['status_list'][i+1])
 
+    context.obj['highlight'] = tid
     context.invoke(show)
 
 
@@ -434,7 +452,7 @@ def demote(context, tid):
 
     i=0
     for i in range(len(context.obj['status_list'])):
-        if row[context.obj['status_key']][1] == context.obj['status_list'][i]:
+        if row[context.obj['status_key']] == context.obj['status_list'][i]:
             break
         else:
             i += 1
@@ -443,6 +461,7 @@ def demote(context, tid):
     else:
         change_status(context, tid, context.obj['status_list'][i-1])
 
+    context.obj['highlight'] = tid
     context.invoke(show)
 
 
