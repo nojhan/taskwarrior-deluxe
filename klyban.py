@@ -133,8 +133,8 @@ def check_id(context, param, value):
 @click.option('-H','--show-headers', is_flag=True, help="Show the headers.")
 @click.option('-S', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
 @click.option('-G', '--highlight', type = int, default = None, help="Highlight a specific task.")
-@click.option('-L', '--layout', type = click.Choice(['vertical-compact']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'vertical-fancy', 'horizontal-compact', 'horizontal-fancy'
-@click.option('-T', '--theme', type = click.Choice(['none', 'user', 'wb', 'blues', 'reds', 'greens'], case_sensitive=False), default = 'none', help="How to display tasks.")
+@click.option('-L', '--layout', type = click.Choice(['vertical-compact', 'vertical-fancy']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-fancy'
+@click.option('-T', '--theme', type = click.Choice(['none', 'user', 'BW', 'BY', 'RW'], case_sensitive=False), default = 'none', help="How to display tasks.")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
 @click.option('--status-list' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
@@ -168,6 +168,7 @@ def cli(context, **kwargs):
     context.obj['layout'] = kwargs['layout']
     context.obj['layouts'] = {
         'vertical-compact': VerticalCompact,
+        'vertical-fancy': VerticalFancy,
     }
     context.obj['themes'] = {
         'none': Theme({
@@ -182,18 +183,42 @@ def cli(context, **kwargs):
             'row_odd': '',
             'row_even': '',
         }),
-        'wb': Theme({
-            'H': '',
-            context.obj['id_key']: 'white',
-            context.obj['status_key']: '',
+        'BW': Theme({
+            'H': 'white',
+            context.obj['id_key']: 'bold black',
+            context.obj['status_key']: 'bold',
             context.obj['title_key']: 'bold white',
-            context.obj['details_key']: '',
-            context.obj['tags_key']: 'italic',
-            context.obj['deadline_key']: '',
+            context.obj['details_key']: 'white',
+            context.obj['tags_key']: 'italic white',
+            context.obj['deadline_key']: 'white',
+            context.obj['touched_key']: 'black',
+            'row_odd': 'on color(237)',
+            'row_even': 'on color(239)',
+        }),
+        'BY': Theme({
+            'H': 'color(220)',
+            context.obj['id_key']: 'bold color(39)',
+            context.obj['status_key']: 'bold color(227)',
+            context.obj['title_key']: 'color(220)',
+            context.obj['details_key']: 'color(33)',
+            context.obj['tags_key']: 'color(27)',
+            context.obj['deadline_key']: 'white',
+            context.obj['touched_key']: 'black',
+            'row_odd' : 'bold',
+            'row_even': '',
+        }),
+        'RW': Theme({
+            'H': 'red',
+            context.obj['id_key']: 'bold red',
+            context.obj['status_key']: 'bold white',
+            context.obj['title_key']: 'bold white',
+            context.obj['details_key']: 'white',
+            context.obj['tags_key']: 'red',
+            context.obj['deadline_key']: 'white',
             context.obj['touched_key']: 'color(240)',
-            'row_odd': 'on color(234)',
-            'row_even': 'on color(235)',
-        })
+            'row_odd' : '',
+            'row_even': '',
+        }),
     }
     context.obj['theme'] = context.obj['themes'][kwargs['theme']]
 
@@ -228,7 +253,26 @@ class Layout:
     def __init__(self, context):
         self.context = context
 
-class VerticalCompact(Layout):
+class Vertical(Layout):
+    def __init__(self, context, table_box, show_lines, panel_box):
+        super().__init__(context)
+        self.show_lines = show_lines
+        self.table_box = table_box
+        self.panel_box = panel_box
+
+    def section_prefix(self, sections):
+        pass
+
+    def section_suffix(self, sections):
+        pass
+
+    def section(self, section, table, sections):
+        # Title styling does not work because of bug #2466 in Rich, fixed after 32d6e99.
+        # See https://github.com/Textualize/rich/issues/2466
+        title = Text(section, style = self.context.obj['status_key'], overflow = 'ellipsis')
+        panel = Panel(table, title = title, title_align="left", border_style = self.context.obj['status_key'], box = self.panel_box, expand = False)
+        sections.append(panel)
+
     def __rich__(self):
         df = self.context.obj['data']
 
@@ -236,7 +280,7 @@ class VerticalCompact(Layout):
         if df.empty:
             return "No task."
 
-        panels = []
+        sections = []
 
         # Group by status.
         tables = df.groupby(self.context.obj['status_key'])
@@ -256,16 +300,39 @@ class VerticalCompact(Layout):
                             msg += "cannot show field `{}`, not found in `{}` ".format(section, self.context.obj['input'])
                     error("INVALID_KEY", msg)
                 else:
-                    table = Table(show_header = self.context.obj['show_headers'], box = None, row_styles = ['row_odd', 'row_even'], expand = True)
+                    if len(df.index) <= 1:
+                        show_lines = False
+                        table_box = None
+                    else:
+                        show_lines = self.show_lines
+                        table_box = self.table_box
+
+                    table = Table(show_header = self.context.obj['show_headers'], box = table_box, row_styles = ['row_odd', 'row_even'], show_lines = show_lines, expand = True)
+
                     for h in self.context.obj['show_keys']:
                         table.add_column(h, style = h)
+
                     for i,row in t.iterrows():
                         items = (str(row[k]) for k in self.context.obj['show_keys'])
                         table.add_row(*items)
-                    panel = Panel.fit(table, title = section, title_align="left")
-                    panels.append(panel)
 
-        return rconsole.Group(*panels)
+                    self.section_prefix(sections)
+                    self.section(section, table, sections)
+                    self.section_suffix(sections)
+
+        return rconsole.Group(*sections)
+
+class VerticalCompact(Vertical):
+    def __init__(self, context):
+        super().__init__(context, table_box = None, show_lines = False, panel_box = box.ROUNDED)
+    # FIXME find a way to use console.rule instead of Panel in self.section
+
+class VerticalFancy(Vertical):
+    def __init__(self, context):
+        super().__init__(context, table_box = box.HORIZONTALS, show_lines = True, panel_box = box.HEAVY_EDGE)
+
+    def section_prefix(self, sections):
+        sections.append("\n")
 
 
 @cli.command()
