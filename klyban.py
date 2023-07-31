@@ -134,13 +134,15 @@ def check_id(context, param, value):
 # Display options.
 @click.option('-h','--show-headers', is_flag=True, help="Show the headers.")
 @click.option('-s', '--show-fields'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
+@click.option('--show-status' , default='TODO,DOING,HOLD', type=str, show_default=True, help="Comma-separated, ordered list of status to show.")
 @click.option('-g', '--highlight', type = int, default = None, help="Highlight a specific task.")
 @click.option('--highlight-mark', type = str, default = '▶', help="String used to highlight a specific task.")
 @click.option('-l', '--layout', type = click.Choice(['vertical-compact', 'vertical-spaced', 'horizontal-compact', 'horizontal-spaced']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-spaced'
 @click.option('-t', '--theme', type = click.Choice(['none', 'user', 'BW', 'BY', 'RW', 'nojhan'], case_sensitive=False), default = 'none', help="How to display tasks.")
+
 # Low-level configuration options.
+@click.option('--status-list' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
-@click.option('--show-status' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
 @click.option('--id-key'      , default='ID'      , type=str, show_default=True, help="Header key defining the unique ID of tasks.")
 @click.option('--title-key'   , default='TITLE'   , type=str, show_default=True, help="Header key defining the title (short description) of tasks.")
 @click.option('--details-key' , default='DETAILS' , type=str, show_default=True, help="Header key defining the details (long description) of tasks.")
@@ -240,7 +242,7 @@ def cli(context, **kwargs):
         }),
         'nojhan': richTheme({
             'H': '#4E9A06',
-            'matching': 'italic on #464141',
+            'matching': 'on #464141',
             context.obj['id_key']: 'bold color(214)',
             context.obj['status_key']: 'bold italic white',
             context.obj['title_key']: 'bold white',
@@ -255,6 +257,7 @@ def cli(context, **kwargs):
     context.obj['theme'] = context.obj['themes'][kwargs['theme']]
 
     context.obj['show_status'] = kwargs['show_status'].split(',')
+    context.obj['status_list'] = kwargs['status_list'].split(',')
     if kwargs['show_fields'].lower() == "all":
         context.obj['show_fields'] = [
             context.obj['id_key'],
@@ -530,6 +533,10 @@ class HorizontalSpaced(Horizontal):
                         # One column.
                         task_table.add_column('')
 
+                        # Add one row for spacing,
+                        # using a non-breakable space to bypass fakepan row filtering.
+                        task_table.add_row(' ')
+
                         nb_title_keys = 0
                         for h in self.context.obj['show_fields']:
                             if h in ['H', self.context.obj['id_key'], self.context.obj['title_key']]:
@@ -563,10 +570,6 @@ class HorizontalSpaced(Horizontal):
                                 task_title = []
                             else:
                                 task_table.add_row(item, style = h)
-
-                        # Add one final row for spacing,
-                        # using a non-breakable space to bypass fakepan row filtering.
-                        task_table.add_row(' ')
 
                         if task['H']:
                             row_style = 'matching'
@@ -756,7 +759,7 @@ def change_status(context, tid, new_status):
     if row.empty:
         error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], tid, context.obj['input']))
 
-    if new_status not in context.obj['show_status']:
+    if new_status not in context.obj['status_list']:
         error("UNKNOWN_STATUS", "Unknown status `{}`".format(new_status))
     else:
         df.loc[tid, context.obj['status_key']] = new_status
@@ -794,15 +797,15 @@ def promote(context, tid):
         error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], tid, context.obj['input']))
 
     i=0
-    for i in range(len(context.obj['show_status'])):
-        if row[context.obj['status_key']] == context.obj['show_status'][i]:
+    for i in range(len(context.obj['status_list'])):
+        if row[context.obj['status_key']] == context.obj['status_list'][i]:
             break
         else:
             i += 1
-    if i >= len(context.obj['show_status'])-1:
+    if i >= len(context.obj['status_list'])-1:
         error("UNKNOWN_STATUS", "Cannot promote task {}, already at the last status.".format(tid))
     else:
-        change_status(context, tid, context.obj['show_status'][i+1])
+        change_status(context, tid, context.obj['status_list'][i+1])
 
     context.obj['highlight'] = tid
     context.invoke(show)
@@ -823,15 +826,15 @@ def demote(context, tid):
         error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], tid, context.obj['input']))
 
     i=0
-    for i in range(len(context.obj['show_status'])):
-        if row[context.obj['status_key']] == context.obj['show_status'][i]:
+    for i in range(len(context.obj['status_list'])):
+        if row[context.obj['status_key']] == context.obj['status_list'][i]:
             break
         else:
             i += 1
     if i == 0:
         error("UNKNOWN_STATUS", "Cannot demote task {}, already at the first status.".format(tid))
     else:
-        change_status(context, tid, context.obj['show_status'][i-1])
+        change_status(context, tid, context.obj['status_list'][i-1])
 
     context.obj['highlight'] = tid
     context.invoke(show)
