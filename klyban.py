@@ -132,7 +132,7 @@ def check_id(context, param, value):
 @click.option('-i', '--input' , help="CSV data file.", default='.klyban.csv', type=click.Path(writable=True, readable=True, allow_dash=True), show_default=True)
 # Display options.
 @click.option('-h','--show-headers', is_flag=True, help="Show the headers.")
-@click.option('-s', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
+@click.option('-s', '--show-fields'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
 @click.option('-g', '--highlight', type = int, default = None, help="Highlight a specific task.")
 @click.option('--highlight-mark', type = str, default = '▶', help="String used to highlight a specific task.")
 @click.option('-l', '--layout', type = click.Choice(['vertical-compact', 'vertical-spaced', 'horizontal-compact', 'horizontal-spaced']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-spaced'
@@ -254,8 +254,8 @@ def cli(context, **kwargs):
     context.obj['theme'] = context.obj['themes'][kwargs['theme']]
 
     context.obj['status_list'] = kwargs['status_list'].split(',')
-    if kwargs['show_keys'].lower() == "all":
-        context.obj['show_keys'] = [
+    if kwargs['show_fields'].lower() == "all":
+        context.obj['show_fields'] = [
             context.obj['id_key'],
             context.obj['status_key'],
             context.obj['title_key'],
@@ -265,10 +265,10 @@ def cli(context, **kwargs):
             context.obj['touched_key'],
         ]
     else:
-        context.obj['show_keys'] = kwargs['show_keys'].split(',')
+        context.obj['show_fields'] = kwargs['show_fields'].split(',')
 
     # Always show the 'Hint' column.
-    context.obj['show_keys'] = ['H'] + context.obj['show_keys']
+    context.obj['show_fields'] = ['H'] + context.obj['show_fields']
 
     # At the end, always load data, whatever the command will be.
     context.obj['data'] = load_data(context)
@@ -325,15 +325,15 @@ class Vertical(Layout):
                 df = df.reset_index().fillna("")
 
                 # Always consider the hint column.
-                if 'H' not in self.context.obj['show_keys']:
-                    self.context.obj['show_keys'] = ['H'] + self.context.obj['show_keys']
+                if 'H' not in self.context.obj['show_fields']:
+                    self.context.obj['show_fields'] = ['H'] + self.context.obj['show_fields']
 
                 try:
                     # Print asked columns.
-                    t = df[self.context.obj['show_keys']]
+                    t = df[self.context.obj['show_fields']]
                 except KeyError as e:
                     msg = ""
-                    for section in self.context.obj['show_keys']:
+                    for section in self.context.obj['show_fields']:
                         if section not in df.columns:
                             msg += "cannot show field `{}`, not found in `{}` ".format(section, self.context.obj['input'])
                     error("INVALID_KEY", msg)
@@ -347,11 +347,11 @@ class Vertical(Layout):
 
                     table = richTable(show_header = self.context.obj['show_headers'], box = table_box, row_styles = ['row_odd', 'row_even'], show_lines = show_lines, expand = True)
 
-                    for h in self.context.obj['show_keys']:
+                    for h in self.context.obj['show_fields']:
                         table.add_column(h, style = h)
 
                     for i,row in t.iterrows():
-                        items = (str(row[k]) for k in self.context.obj['show_keys'])
+                        items = (str(row[k]) for k in self.context.obj['show_fields'])
                         if row['H']:
                             row_style = 'matching'
                         else:
@@ -410,17 +410,17 @@ class HorizontalCompact(Horizontal):
                 df = df.reset_index().fillna("")
 
                 # Always consider the hint column.
-                if 'H' not in self.context.obj['show_keys']:
-                    self.context.obj['show_keys'] = ['H'] + self.context.obj['show_keys']
+                if 'H' not in self.context.obj['show_fields']:
+                    self.context.obj['show_fields'] = ['H'] + self.context.obj['show_fields']
 
                 console = rconsole.Console()
 
                 try:
                     # Print asked columns.
-                    t = df[self.context.obj['show_keys']]
+                    t = df[self.context.obj['show_fields']]
                 except KeyError as e:
                     msg = ""
-                    for section in self.context.obj['show_keys']:
+                    for section in self.context.obj['show_fields']:
                         if section not in df.columns:
                             msg += "cannot show field `{}`, not found in `{}` ".format(section, self.context.obj['input'])
                     error("INVALID_KEY", msg)
@@ -434,11 +434,11 @@ class HorizontalCompact(Horizontal):
 
                     table = richTable(show_header = self.context.obj['show_headers'], box = table_box, row_styles = ['row_odd', 'row_even'], show_lines = show_lines, expand = True)
 
-                    for h in self.context.obj['show_keys']:
+                    for h in self.context.obj['show_fields']:
                         table.add_column(h, style = h)
 
                     for i,row in t.iterrows():
-                        items = (str(row[k]) for k in self.context.obj['show_keys'])
+                        items = (str(row[k]) for k in self.context.obj['show_fields'])
                         if row['H']:
                             row_style = 'matching'
                         else:
@@ -496,17 +496,17 @@ class HorizontalSpaced(Horizontal):
                 df = df.reset_index().fillna("")
 
                 # Always consider the hint column.
-                if 'H' not in self.context.obj['show_keys']:
-                    self.context.obj['show_keys'] = ['H'] + self.context.obj['show_keys']
+                if 'H' not in self.context.obj['show_fields']:
+                    self.context.obj['show_fields'] = ['H'] + self.context.obj['show_fields']
 
                 console = rconsole.Console()
 
                 try:
                     # Print asked columns.
-                    t = df[self.context.obj['show_keys']]
+                    t = df[self.context.obj['show_fields']]
                 except KeyError as e:
                     msg = ""
-                    for section in self.context.obj['show_keys']:
+                    for section in self.context.obj['show_fields']:
                         if section not in df.columns:
                             msg += "cannot show field `{}`, not found in `{}` ".format(section, self.context.obj['input'])
                     error("INVALID_KEY", msg)
@@ -530,12 +530,12 @@ class HorizontalSpaced(Horizontal):
                         task_table.add_column('')
 
                         nb_title_keys = 0
-                        for h in self.context.obj['show_keys']:
+                        for h in self.context.obj['show_fields']:
                             if h in ['H', self.context.obj['id_key'], self.context.obj['title_key']]:
                                 nb_title_keys += 1
 
                         task_title = []
-                        for h in self.context.obj['show_keys']:
+                        for h in self.context.obj['show_fields']:
                             item = str(task[h])
 
                             if h == 'H':
@@ -621,14 +621,14 @@ def show(context, tid):
         table.add_column("Task")
 
         def add_row_text(table, key, icon = ''):
-            if context.obj[key] in context.obj['show_keys']:
+            if context.obj[key] in context.obj['show_fields']:
                 if str(row[context.obj[key]]) != "nan": # FIXME WTF?
                     table.add_row(icon + row[context.obj[key]])
                 else:
                     return
 
         def add_row_list(table, key = context.obj['tags_key'], icon = ''):
-            if context.obj[key] in context.obj['show_keys']:
+            if context.obj[key] in context.obj['show_fields']:
                 if str(row[context.obj[key]]) != "nan": # FIXME WTF?
                     tags = [icon+t for t in row[context.obj[key]].split(',')]
                     columns = richColumns(tags, expand = False)
@@ -643,9 +643,9 @@ def show(context, tid):
 
         # Label content.
         l = []
-        if context.obj['id_key'] in context.obj['show_keys']:
+        if context.obj['id_key'] in context.obj['show_fields']:
             l.append(str(tid))
-        if context.obj['title_key'] in context.obj['show_keys']:
+        if context.obj['title_key'] in context.obj['show_fields']:
             l.append(row[context.obj['title_key']])
         label = ": ".join(l)
 
@@ -842,8 +842,9 @@ def config(context):
 
 @cli.command()
 @click.argument('REGEX', required=True, type=str)
+@click.option('-a', '--all' , is_flag = True, type = bool, default = False, help="Search even in hidden fields.")
 @click.pass_context
-def filter(context, regex):
+def filter(context, regex, all):
     """Only show the tasks for which showed columns do contains a string matching the given regexp.
 
     Example: klyban filter '[Aa]nd'"""
@@ -854,7 +855,10 @@ def filter(context, regex):
     df = df.reset_index().fillna("").astype('string')
 
     # Filter mask.
-    mask = np.column_stack([ df[col].str.contains(regex, na=False) for col in df[context.obj['show_keys']] ] )
+    if all:
+        mask = np.column_stack([ df[col].str.contains(regex, na=False) for col in df ] )
+    else:
+        mask = np.column_stack([ df[col].str.contains(regex, na=False) for col in df[context.obj['show_fields']] ] )
 
     # Update in context for `show` to see.
     context.obj['data'] = df.loc[mask.any(axis=1)]
@@ -865,8 +869,9 @@ def filter(context, regex):
 @cli.command()
 @click.argument('REGEX', required=True, type=str)
 @click.option('-m', '--mark', type = str, default = '▶', help="String used to highlight matching tasks.")
+@click.option('-a', '--all' , is_flag = True, type = bool, default = False, help="Search even in hidden fields.")
 @click.pass_context
-def find(context, regex, mark):
+def find(context, regex, mark, all):
     """Point out tasks containing a string matching the given regexp in any of the showed columns.
 
     Example: klyban find '[Aa]nd'"""
@@ -877,7 +882,10 @@ def find(context, regex, mark):
     df = df.reset_index().fillna("").astype('string')
 
     # Filter mask.
-    mask = np.column_stack([ df[col].str.contains(regex, na=False) for col in df[context.obj['show_keys']] ] )
+    if all:
+        mask = np.column_stack([ df[col].str.contains(regex, na=False) for col in df ] )
+    else:
+        mask = np.column_stack([ df[col].str.contains(regex, na=False) for col in df[context.obj['show_fields']] ] )
 
     # Mark out matching tasks.
     df.loc[mask.any(axis=1), 'H'] = mark
