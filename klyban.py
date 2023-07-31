@@ -10,11 +10,12 @@ import pandas as pd
 import click
 # import tabulate
 import rich.console as rconsole
-from rich.table import Table
-from rich.text import Text
-from rich.panel import Panel
-from rich.columns import Columns
-from rich.theme import Theme
+from rich.table import Table as richTable
+from rich.text import Text as richText
+from rich.panel import Panel as richPanel
+from rich.columns import Columns as richColumns
+from rich.theme import Theme as richTheme
+from rich.layout import Layout as richLayout
 from rich import box
 
 
@@ -134,7 +135,7 @@ def check_id(context, param, value):
 @click.option('-s', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
 @click.option('-g', '--highlight', type = int, default = None, help="Highlight a specific task.")
 @click.option('--highlight-mark', type = str, default = ':arrow_forward:', help="String used to highlight a specific task.")
-@click.option('-l', '--layout', type = click.Choice(['vertical-compact', 'vertical-fancy']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-fancy'
+@click.option('-l', '--layout', type = click.Choice(['vertical-compact', 'vertical-spaced', 'horizontal-compact']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-spaced'
 @click.option('-t', '--theme', type = click.Choice(['none', 'user', 'BW', 'BY', 'RW', 'nojhan'], case_sensitive=False), default = 'none', help="How to display tasks.")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
@@ -178,11 +179,12 @@ def cli(context, **kwargs):
     store('layout')
     context.obj['layouts'] = {
         'vertical-compact': VerticalCompact,
-        'vertical-fancy': VerticalFancy,
+        'vertical-spaceds': VerticalSpaced,
+        'horizontal-compact': HorizontalCompact,
     }
 
     context.obj['themes'] = {
-        'none': Theme({
+        'none': richTheme({
             'H': '',
             'matching': 'italic',
             context.obj['id_key']: '',
@@ -195,7 +197,7 @@ def cli(context, **kwargs):
             'row_odd': '',
             'row_even': '',
         }),
-        'BW': Theme({
+        'BW': richTheme({
             'H': 'white',
             'matching': 'italic',
             context.obj['id_key']: 'bold black',
@@ -208,7 +210,7 @@ def cli(context, **kwargs):
             'row_odd': 'on color(237)',
             'row_even': 'on color(239)',
         }),
-        'BY': Theme({
+        'BY': richTheme({
             'H': 'color(220)',
             'matching': 'italic',
             context.obj['id_key']: 'bold color(39)',
@@ -221,7 +223,7 @@ def cli(context, **kwargs):
             'row_odd' : 'bold',
             'row_even': '',
         }),
-        'RW': Theme({
+        'RW': richTheme({
             'H': 'red',
             'matching': 'italic',
             context.obj['id_key']: 'bold red',
@@ -234,7 +236,7 @@ def cli(context, **kwargs):
             'row_odd' : '',
             'row_even': '',
         }),
-        'nojhan': Theme({
+        'nojhan': richTheme({
             'H': '#4E9A06',
             'matching': 'italic on #464141',
             context.obj['id_key']: 'bold color(214)',
@@ -295,8 +297,8 @@ class Vertical(Layout):
     def section(self, section, table, sections):
         # Title styling does not work because of bug #2466 in Rich, fixed after 32d6e99.
         # See https://github.com/Textualize/rich/issues/2466
-        title = Text(section, style = self.context.obj['status_key'], overflow = 'ellipsis')
-        panel = Panel(table, title = title, title_align="left", border_style = self.context.obj['status_key'], box = self.panel_box, expand = False)
+        title = richText(section, style = self.context.obj['status_key'], overflow = 'ellipsis')
+        panel = richPanel(table, title = title, title_align="left", border_style = self.context.obj['status_key'], box = self.panel_box, expand = False)
         sections.append(panel)
 
     def __rich__(self):
@@ -342,7 +344,7 @@ class Vertical(Layout):
                         show_lines = self.show_lines
                         table_box = self.table_box
 
-                    table = Table(show_header = self.context.obj['show_headers'], box = table_box, row_styles = ['row_odd', 'row_even'], show_lines = show_lines, expand = True)
+                    table = richTable(show_header = self.context.obj['show_headers'], box = table_box, row_styles = ['row_odd', 'row_even'], show_lines = show_lines, expand = True)
 
                     for h in self.context.obj['show_keys']:
                         table.add_column(h, style = h)
@@ -364,14 +366,113 @@ class Vertical(Layout):
 class VerticalCompact(Vertical):
     def __init__(self, context):
         super().__init__(context, table_box = None, show_lines = False, panel_box = box.ROUNDED)
-    # FIXME find a way to use console.rule instead of Panel in self.section
+    # FIXME find a way to use console.rule instead of richPanel in self.section
 
-class VerticalFancy(Vertical):
+class VerticalSpaced(Vertical):
     def __init__(self, context):
         super().__init__(context, table_box = box.HORIZONTALS, show_lines = True, panel_box = box.HEAVY_EDGE)
 
     def section_prefix(self, sections):
         sections.append("\n")
+
+class Horizontal(Layout):
+    def __init__(self, context, table_box, show_lines, panel_box):
+        super().__init__(context)
+        self.show_lines = show_lines
+        self.table_box = table_box
+        self.panel_box = panel_box
+
+class HorizontalCompact(Horizontal):
+    def __init__(self, context):
+        super().__init__(context, table_box = None, show_lines = False, panel_box = box.ROUNDED)
+
+    def __rich__(self):
+        df = self.context.obj['data']
+
+        # Show the kanban tables.
+        if df.empty:
+            return "No task."
+
+        sections = []
+
+        if self.context.obj['highlight'] is not None:
+            df.loc[self.context.obj['highlight'], 'H'] = self.contex.obj['highlight_mark']
+
+        # Group by status.
+        tables = df.groupby(self.context.obj['status_key'])
+        # Loop over the asked ordered status groups.
+        for section in self.context.obj['status_list']: # Ordered.
+            if section in tables.groups:
+                df = tables.get_group(section)
+
+                # Bring back TID as a regular column.
+                df = df.reset_index().fillna("")
+
+                # Always consider the hint column.
+                if 'H' not in self.context.obj['show_keys']:
+                    self.context.obj['show_keys'] = ['H'] + self.context.obj['show_keys']
+
+                console = rconsole.Console()
+
+                try:
+                    # Print asked columns.
+                    t = df[self.context.obj['show_keys']]
+                except KeyError as e:
+                    msg = ""
+                    for section in self.context.obj['show_keys']:
+                        if section not in df.columns:
+                            msg += "cannot show field `{}`, not found in `{}` ".format(section, self.context.obj['input'])
+                    error("INVALID_KEY", msg)
+                else:
+                    if len(df.index) <= 1:
+                        show_lines = False
+                        table_box = None
+                    else:
+                        show_lines = self.show_lines
+                        table_box = self.table_box
+
+                    table = richTable(show_header = self.context.obj['show_headers'], box = table_box, row_styles = ['row_odd', 'row_even'], show_lines = show_lines, expand = True)
+
+                    for h in self.context.obj['show_keys']:
+                        table.add_column(h, style = h)
+
+                    for i,row in t.iterrows():
+                        items = (str(row[k]) for k in self.context.obj['show_keys'])
+                        if row['H']:
+                            row_style = 'matching'
+                        else:
+                            row_style = None
+                        table.add_row(*items, style = row_style)
+
+                    title = richText(section, style = self.context.obj['status_key'], overflow = 'ellipsis')
+                    panel = richPanel(table, title = title, title_align="left", border_style = self.context.obj['status_key'], box = self.panel_box, expand = True)
+
+                    sections.append(richLayout(panel, name = section))
+
+        layout = richLayout()
+        layout.split_row(*sections)
+
+        # FIXME ugly hack: pre-render the englobing panel, then count the number of "non empty" lines.
+        fakepan = richPanel(layout, box = box.SIMPLE, border_style = 'none')
+        console = rconsole.Console(theme = self.context.obj['theme'], no_color = True)
+        with console.capture() as capture:
+            console.print(fakepan)
+        lines = capture.get().split('\n')
+        nb_lines = 0
+        for line in lines:
+            letters = set(line)
+            if letters != set({'m', '[', '\x1b', '│', '1', '3', '0', ' ', ';'}):
+                nb_lines += 1
+
+        superpan = richPanel(layout, height = nb_lines, box = box.SIMPLE, border_style = 'none')
+        return superpan
+
+class HorizontalSpaced(Horizontal):
+    def __init__(self, context):
+        super().__init__(context, table_box = None, show_lines = False, panel_box = box.ROUNDED)
+
+    def __rich__(self):
+        pass
 
 
 @cli.command()
@@ -397,7 +498,7 @@ def show(context, tid):
 
         console = rconsole.Console()
 
-        table = Table(box = None, show_header = False)
+        table = richTable(box = None, show_header = False)
         table.add_column("Task")
 
         def add_row_text(table, key, icon = ''):
@@ -411,7 +512,7 @@ def show(context, tid):
             if context.obj[key] in context.obj['show_keys']:
                 if str(row[context.obj[key]]) != "nan": # FIXME WTF?
                     tags = [icon+t for t in row[context.obj[key]].split(',')]
-                    columns = Columns(tags, expand = False)
+                    columns = richColumns(tags, expand = False)
                     table.add_row(columns)
                 else:
                     return
@@ -429,7 +530,7 @@ def show(context, tid):
             l.append(row[context.obj['title_key']])
         label = ": ".join(l)
 
-        panel = Panel.fit(table, title = label, title_align="left")
+        panel = richPanel.fit(table, title = label, title_align="left")
         console.print(panel)
 
 
