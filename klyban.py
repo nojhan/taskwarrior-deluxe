@@ -16,6 +16,7 @@ from rich.panel import Panel as richPanel
 from rich.columns import Columns as richColumns
 from rich.theme import Theme as richTheme
 from rich.layout import Layout as richLayout
+from rich.console import Group as richGroup
 from rich import box
 
 
@@ -562,6 +563,10 @@ class HorizontalSpaced(Horizontal):
                                 task_title = []
                             else:
                                 task_table.add_row(item, style = h)
+
+                        # Add one final row for spacing,
+                        # using a non-breakable space to bypass fakepan row filtering.
+                        task_table.add_row(' ')
 
                         if task['H']:
                             row_style = 'matching'
