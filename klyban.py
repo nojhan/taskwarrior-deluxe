@@ -130,11 +130,12 @@ def check_id(context, param, value):
 )
 @click.option('-i', '--input' , help="CSV data file.", default='.klyban.csv', type=click.Path(writable=True, readable=True, allow_dash=True), show_default=True)
 # Display options.
-@click.option('-H','--show-headers', is_flag=True, help="Show the headers.")
-@click.option('-S', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
-@click.option('-G', '--highlight', type = int, default = None, help="Highlight a specific task.")
-@click.option('-L', '--layout', type = click.Choice(['vertical-compact', 'vertical-fancy']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-fancy'
-@click.option('-T', '--theme', type = click.Choice(['none', 'user', 'BW', 'BY', 'RW', 'nojhan'], case_sensitive=False), default = 'none', help="How to display tasks.")
+@click.option('-h','--show-headers', is_flag=True, help="Show the headers.")
+@click.option('-s', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
+@click.option('-g', '--highlight', type = int, default = None, help="Highlight a specific task.")
+@click.option('--highlight-mark', type = str, default = ':arrow_forward:', help="String used to highlight a specific task.")
+@click.option('-l', '--layout', type = click.Choice(['vertical-compact', 'vertical-fancy']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-fancy'
+@click.option('-t', '--theme', type = click.Choice(['none', 'user', 'BW', 'BY', 'RW', 'nojhan'], case_sensitive=False), default = 'none', help="How to display tasks.")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
 @click.option('--status-list' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
@@ -153,26 +154,37 @@ def cli(context, **kwargs):
     # Ensure that context.obj exists and is a dict.
     context.ensure_object(dict)
 
-    context.obj['input'] = kwargs['input']
+    def store(context_key, kw_key = None):
+        if not kw_key:
+            kw_key = context_key
+        context.obj[context_key] = kwargs[kw_key]
 
-    context.obj['id_key'] = kwargs['id_key']
-    context.obj['status_key'] = kwargs['status_key']
-    context.obj['title_key'] = kwargs['title_key']
-    context.obj['details_key'] = kwargs['details_key']
-    context.obj['tags_key'] = kwargs['tags_key']
-    context.obj['deadline_key'] = kwargs['deadline_key']
-    context.obj['touched_key'] = kwargs['touched_key']
+    store('input')
 
-    context.obj['show_headers'] = kwargs['show_headers']
-    context.obj['highlight'] = kwargs['highlight']
-    context.obj['layout'] = kwargs['layout']
+    store('debug')
+
+    store('id_key')
+    store('status_key')
+    store('title_key')
+    store('details_key')
+    store('tags_key')
+    store('deadline_key')
+    store('touched_key')
+
+    store('show_headers')
+    store('highlight')
+    store('highlight_mark')
+
+    store('layout')
     context.obj['layouts'] = {
         'vertical-compact': VerticalCompact,
         'vertical-fancy': VerticalFancy,
     }
+
     context.obj['themes'] = {
         'none': Theme({
             'H': '',
+            'matching': 'italic',
             context.obj['id_key']: '',
             context.obj['status_key']: '',
             context.obj['title_key']: '',
@@ -185,6 +197,7 @@ def cli(context, **kwargs):
         }),
         'BW': Theme({
             'H': 'white',
+            'matching': 'italic',
             context.obj['id_key']: 'bold black',
             context.obj['status_key']: 'bold',
             context.obj['title_key']: 'bold white',
@@ -197,6 +210,7 @@ def cli(context, **kwargs):
         }),
         'BY': Theme({
             'H': 'color(220)',
+            'matching': 'italic',
             context.obj['id_key']: 'bold color(39)',
             context.obj['status_key']: 'bold color(227)',
             context.obj['title_key']: 'color(220)',
@@ -209,6 +223,7 @@ def cli(context, **kwargs):
         }),
         'RW': Theme({
             'H': 'red',
+            'matching': 'italic',
             context.obj['id_key']: 'bold red',
             context.obj['status_key']: 'bold white',
             context.obj['title_key']: 'bold white',
@@ -221,6 +236,7 @@ def cli(context, **kwargs):
         }),
         'nojhan': Theme({
             'H': '#4E9A06',
+            'matching': 'italic on #464141',
             context.obj['id_key']: 'bold color(214)',
             context.obj['status_key']: 'bold italic white',
             context.obj['title_key']: 'bold white',
@@ -250,8 +266,6 @@ def cli(context, **kwargs):
 
     # Always show the 'Hint' column.
     context.obj['show_keys'] = ['H'] + context.obj['show_keys']
-
-    context.obj['debug'] = kwargs['debug']
 
     # At the end, always load data, whatever the command will be.
     context.obj['data'] = load_data(context)
@@ -295,7 +309,7 @@ class Vertical(Layout):
         sections = []
 
         if self.context.obj['highlight'] is not None:
-            df.loc[self.context.obj['highlight'], 'H'] = ':arrow_forward:'
+            df.loc[self.context.obj['highlight'], 'H'] = self.contex.obj['highlight_mark']
 
         # Group by status.
         tables = df.groupby(self.context.obj['status_key'])
@@ -335,7 +349,11 @@ class Vertical(Layout):
 
                     for i,row in t.iterrows():
                         items = (str(row[k]) for k in self.context.obj['show_keys'])
-                        table.add_row(*items)
+                        if row['H']:
+                            row_style = 'matching'
+                        else:
+                            row_style = None
+                        table.add_row(*items, style = row_style)
 
                     self.section_prefix(sections)
                     self.section(section, table, sections)
@@ -413,7 +431,6 @@ def show(context, tid):
 
         panel = Panel.fit(table, title = label, title_align="left")
         console.print(panel)
-
 
 
 @cli.command()
@@ -506,7 +523,6 @@ def remove(context, tid):
     context.invoke(show)
 
 
-
 def change_status(context, tid, new_status):
     """Edit the status of a task."""
     df = context.obj['data']
@@ -522,7 +538,6 @@ def change_status(context, tid, new_status):
         df.loc[tid, context.obj['touched_key']] = datetime.datetime.now().isoformat()
 
     save_data(context, df)
-
 
 @cli.command()
 @click.argument('TID', required=True, type=int, is_eager=True, callback=check_id)
@@ -603,6 +618,54 @@ def config(context):
     """Show the current configuration."""
     click.echo('Configuration:')
     click.echo(f"Data file: `{context.obj['input']}`")
+
+
+@cli.command()
+@click.argument('REGEX', required=True, type=str)
+@click.pass_context
+def filter(context, regex):
+    """Only show the tasks for which showed columns do contains a string matching the given regexp.
+
+    Example: klyban filter '[Aa]nd'"""
+
+    df = context.obj['data']
+
+    # Bring back TID as a regular *string* column.
+    df = df.reset_index().fillna("").astype('string')
+
+    # Filter mask.
+    mask = np.column_stack([ df[col].str.contains(regex, na=False) for col in df[context.obj['show_keys']] ] )
+
+    # Update in context for `show` to see.
+    context.obj['data'] = df.loc[mask.any(axis=1)]
+
+    context.invoke(show)
+
+
+@cli.command()
+@click.argument('REGEX', required=True, type=str)
+@click.option('-m', '--mark', type = str, default = ':arrow_forward:', help="String used to highlight matching tasks.")
+@click.pass_context
+def find(context, regex, mark):
+    """Point out tasks containing a string matching the given regexp in any of the showed columns.
+
+    Example: klyban find '[Aa]nd'"""
+
+    df = context.obj['data']
+
+    # Bring back TID as a regular *string* column.
+    df = df.reset_index().fillna("").astype('string')
+
+    # Filter mask.
+    mask = np.column_stack([ df[col].str.contains(regex, na=False) for col in df[context.obj['show_keys']] ] )
+
+    # Mark out matching tasks.
+    df.loc[mask.any(axis=1), 'H'] = mark
+
+    # Update in context for `show` to see.
+    context.obj['data'] = df
+
+    context.invoke(show)
 
 
 if __name__ == '__main__':
