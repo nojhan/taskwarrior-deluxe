@@ -10,6 +10,7 @@
 10,"DONE","fix delete","'delete' print the kanban not updated","bug","","2023-07-29T17:48:14.950376"
 11,"TODO","fix quotes","After 'add', empty columns got remaining quotes.","bug","","2023-07-29T17:49:33.862442"
 12,"TODO","multiple select","Allow to pass several IDs or ranges to commands.","feat","","2023-07-29T17:49:05.411800"
-13,"DOING","card widgets","Refactor into cards/list of cards with widget classes.","feat,UX","","2023-07-30T15:26:41.900699"
+13,"DOING","card widgets","Refactor into cards/list of cards with widget classes.","feat","","2023-07-31T09:24:34.469400"
 14,"DONE","highlight last action","Use a virtual hint column to point to the last touched task.","feat,UX","","2023-07-30T10:20:36.795048"
 15,"TODO","hide old done tasks","Hide tasks with last status that haven't been touched since a long time.","feat","","2023-07-30T10:16:39.517669"
+16,"TODO","sort by priority","Add a priority column and a sorting option.","feat","","2023-07-31T09:19:16.258603"

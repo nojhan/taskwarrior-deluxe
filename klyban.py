@@ -134,7 +134,7 @@ def check_id(context, param, value):
 @click.option('-S', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
 @click.option('-G', '--highlight', type = int, default = None, help="Highlight a specific task.")
 @click.option('-L', '--layout', type = click.Choice(['vertical-compact', 'vertical-fancy']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-fancy'
-@click.option('-T', '--theme', type = click.Choice(['none', 'user', 'BW', 'BY', 'RW'], case_sensitive=False), default = 'none', help="How to display tasks.")
+@click.option('-T', '--theme', type = click.Choice(['none', 'user', 'BW', 'BY', 'RW', 'nojhan'], case_sensitive=False), default = 'none', help="How to display tasks.")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
 @click.option('--status-list' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
@@ -219,6 +219,18 @@ def cli(context, **kwargs):
             'row_odd' : '',
             'row_even': '',
         }),
+        'nojhan': Theme({
+            'H': '#4E9A06',
+            context.obj['id_key']: 'bold color(214)',
+            context.obj['status_key']: 'bold italic white',
+            context.obj['title_key']: 'bold white',
+            context.obj['details_key']: 'white',
+            context.obj['tags_key']: 'color(27)',
+            context.obj['deadline_key']: 'white',
+            context.obj['touched_key']: 'color(240)',
+            'row_odd' : '', # on #262121
+            'row_even': 'on #2d2929',
+        }),
     }
     context.obj['theme'] = context.obj['themes'][kwargs['theme']]
 
@@ -282,14 +294,23 @@ class Vertical(Layout):
 
         sections = []
 
+        if self.context.obj['highlight'] is not None:
+            df.loc[self.context.obj['highlight'], 'H'] = ':arrow_forward:'
+
         # Group by status.
         tables = df.groupby(self.context.obj['status_key'])
         # Loop over the asked ordered status groups.
         for section in self.context.obj['status_list']: # Ordered.
             if section in tables.groups:
                 df = tables.get_group(section)
+
                 # Bring back TID as a regular column.
                 df = df.reset_index().fillna("")
+
+                # Always consider the hint column.
+                if 'H' not in self.context.obj['show_keys']:
+                    self.context.obj['show_keys'] = ['H'] + self.context.obj['show_keys']
+
                 try:
                     # Print asked columns.
                     t = df[self.context.obj['show_keys']]
@@ -346,9 +367,6 @@ def show(context, tid):
     df = load_data(context)
 
     if tid is None:
-
-        if context.obj['highlight'] is not None:
-            df.loc[context.obj['highlight'], 'H'] = ':arrow_forward:'
 
         layout = context.obj['layouts'][context.obj['layout']](context)
         console = rconsole.Console(theme = context.obj['theme'])
@@ -477,9 +495,9 @@ def check_yes(context, param, value):
 
 @cli.command()
 @click.argument('TID', required=True, type=int, is_eager=True, callback=check_id)
-@click.option('-y', '--yes', is_flag=True, expose_value=False, callback=check_yes, prompt="Permanently delete task from records?")
+@click.option('-y', '--yes', is_flag=True, expose_value=False, callback=check_yes, prompt="Permanently remove task from records?")
 @click.pass_context
-def delete(context, tid):
+def remove(context, tid):
     """Delete a task."""
     df = context.obj['data']
     df = df.drop(index=tid)
