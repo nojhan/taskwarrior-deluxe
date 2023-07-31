@@ -140,7 +140,7 @@ def check_id(context, param, value):
 @click.option('-t', '--theme', type = click.Choice(['none', 'user', 'BW', 'BY', 'RW', 'nojhan'], case_sensitive=False), default = 'none', help="How to display tasks.")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
-@click.option('--status-list' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
+@click.option('--show-status' , default='TODO,DOING,HOLD,DONE', type=str, show_default=True, help="Comma-separated, ordered list of possible values for the status of tasks.")
 @click.option('--id-key'      , default='ID'      , type=str, show_default=True, help="Header key defining the unique ID of tasks.")
 @click.option('--title-key'   , default='TITLE'   , type=str, show_default=True, help="Header key defining the title (short description) of tasks.")
 @click.option('--details-key' , default='DETAILS' , type=str, show_default=True, help="Header key defining the details (long description) of tasks.")
@@ -254,7 +254,7 @@ def cli(context, **kwargs):
     }
     context.obj['theme'] = context.obj['themes'][kwargs['theme']]
 
-    context.obj['status_list'] = kwargs['status_list'].split(',')
+    context.obj['show_status'] = kwargs['show_status'].split(',')
     if kwargs['show_fields'].lower() == "all":
         context.obj['show_fields'] = [
             context.obj['id_key'],
@@ -300,7 +300,7 @@ class Vertical(Layout):
         # Title styling does not work because of bug #2466 in Rich, fixed after 32d6e99.
         # See https://github.com/Textualize/rich/issues/2466
         title = richText(section, style = self.context.obj['status_key'], overflow = 'ellipsis')
-        panel = richPanel(table, title = title, title_align="left", border_style = self.context.obj['status_key'], box = self.panel_box, expand = False)
+        panel = richPanel(table, title = title, title_align="left", border_style = self.context.obj['status_key'], box = self.panel_box, expand = False, padding = (0,0))
         sections.append(panel)
 
     def __rich__(self):
@@ -318,7 +318,7 @@ class Vertical(Layout):
         # Group by status.
         tables = df.groupby(self.context.obj['status_key'])
         # Loop over the asked ordered status groups.
-        for section in self.context.obj['status_list']: # Ordered.
+        for section in self.context.obj['show_status']: # Ordered.
             if section in tables.groups:
                 df = tables.get_group(section)
 
@@ -403,7 +403,7 @@ class HorizontalCompact(Horizontal):
         # Group by status.
         tables = df.groupby(self.context.obj['status_key'])
         # Loop over the asked ordered status groups.
-        for section in self.context.obj['status_list']: # Ordered.
+        for section in self.context.obj['show_status']: # Ordered.
             if section in tables.groups:
                 df = tables.get_group(section)
 
@@ -455,7 +455,7 @@ class HorizontalCompact(Horizontal):
         layout.split_row(*sections)
 
         # FIXME ugly hack: pre-render the englobing panel, then count the number of "non empty" lines.
-        fakepan = richPanel(layout, box = box.SIMPLE, border_style = 'none')
+        fakepan = richPanel(layout, box = box.SIMPLE, border_style = 'none', padding = (0,0))
         console = rconsole.Console(theme = self.context.obj['theme'], no_color = True)
         with console.capture() as capture:
             console.print(fakepan)
@@ -467,7 +467,7 @@ class HorizontalCompact(Horizontal):
                 nb_lines += 1
 
         # FIXME get rid of the space padding added by the panel, even without border.
-        superpan = richPanel(layout, height = nb_lines, box = box.SIMPLE, border_style = 'none')
+        superpan = richPanel(layout, height = nb_lines, box = box.SIMPLE, border_style = 'none', padding = (0,0))
         return superpan
 
 class HorizontalSpaced(Horizontal):
@@ -489,7 +489,7 @@ class HorizontalSpaced(Horizontal):
         # Group by status.
         tables = df.groupby(self.context.obj['status_key'])
         # Loop over the asked ordered status groups.
-        for section in self.context.obj['status_list']: # Ordered.
+        for section in self.context.obj['show_status']: # Ordered.
             if section in tables.groups:
                 df = tables.get_group(section)
 
@@ -583,7 +583,7 @@ class HorizontalSpaced(Horizontal):
         layout.split_row(*sections)
 
         # FIXME ugly hack: pre-render the englobing panel, then count the number of "non empty" lines.
-        fakepan = richPanel(layout, box = box.SIMPLE, border_style = 'none')
+        fakepan = richPanel(layout, box = box.SIMPLE, border_style = 'none', padding = (0,0))
         console = rconsole.Console(theme = self.context.obj['theme'], no_color = True)
         with console.capture() as capture:
             console.print(fakepan)
@@ -595,7 +595,7 @@ class HorizontalSpaced(Horizontal):
                 nb_lines += 1
 
         # FIXME get rid of the space padding added by the panel, even without border.
-        superpan = richPanel(layout, height = nb_lines, box = box.SIMPLE, border_style = 'none')
+        superpan = richPanel(layout, height = nb_lines, box = box.SIMPLE, border_style = 'none', padding = (0,0))
         return superpan
 
 
@@ -756,7 +756,7 @@ def change_status(context, tid, new_status):
     if row.empty:
         error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], tid, context.obj['input']))
 
-    if new_status not in context.obj['status_list']:
+    if new_status not in context.obj['show_status']:
         error("UNKNOWN_STATUS", "Unknown status `{}`".format(new_status))
     else:
         df.loc[tid, context.obj['status_key']] = new_status
@@ -771,7 +771,7 @@ def change_status(context, tid, new_status):
 def status(context, tid, status):
     """Explicitely change the status of a task.
 
-    Use status names configured with --status-list."""
+    Use status names configured with --show-status."""
 
     change_status(context, tid, status)
 
@@ -785,7 +785,7 @@ def status(context, tid, status):
 def promote(context, tid):
     """Upgrade the status of a task to the next one.
 
-    Use status names configured with --status-list."""
+    Use status names configured with --show-status."""
 
     df = context.obj['data']
 
@@ -794,15 +794,15 @@ def promote(context, tid):
         error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], tid, context.obj['input']))
 
     i=0
-    for i in range(len(context.obj['status_list'])):
-        if row[context.obj['status_key']] == context.obj['status_list'][i]:
+    for i in range(len(context.obj['show_status'])):
+        if row[context.obj['status_key']] == context.obj['show_status'][i]:
             break
         else:
             i += 1
-    if i >= len(context.obj['status_list'])-1:
+    if i >= len(context.obj['show_status'])-1:
         error("UNKNOWN_STATUS", "Cannot promote task {}, already at the last status.".format(tid))
     else:
-        change_status(context, tid, context.obj['status_list'][i+1])
+        change_status(context, tid, context.obj['show_status'][i+1])
 
     context.obj['highlight'] = tid
     context.invoke(show)
@@ -814,7 +814,7 @@ def promote(context, tid):
 def demote(context, tid):
     """Downgrade the status of a task to the previous one.
 
-    Use status names configured with --status-list."""
+    Use status names configured with --show-status."""
 
     df = context.obj['data']
 
@@ -823,15 +823,15 @@ def demote(context, tid):
         error("ID_NOT_FOUND", "{} = {} not found in `{}`".format(context.obj['id_key'], tid, context.obj['input']))
 
     i=0
-    for i in range(len(context.obj['status_list'])):
-        if row[context.obj['status_key']] == context.obj['status_list'][i]:
+    for i in range(len(context.obj['show_status'])):
+        if row[context.obj['status_key']] == context.obj['show_status'][i]:
             break
         else:
             i += 1
     if i == 0:
         error("UNKNOWN_STATUS", "Cannot demote task {}, already at the first status.".format(tid))
     else:
-        change_status(context, tid, context.obj['status_list'][i-1])
+        change_status(context, tid, context.obj['show_status'][i-1])
 
     context.obj['highlight'] = tid
     context.invoke(show)
