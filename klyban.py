@@ -620,15 +620,15 @@ def show(context, tid):
         # Show a task card.
         row = df.loc[tid]
 
-        console = rconsole.Console()
+        console = rconsole.Console(theme = context.obj['theme'])
 
-        table = richTable(box = None, show_header = False)
+        table = richTable(box = None, show_header = False, expand = False, row_styles = ['row_odd', 'row_even'])
         table.add_column("Task")
 
         def add_row_text(table, key, icon = ''):
             if context.obj[key] in context.obj['show_fields']:
                 if str(row[context.obj[key]]) != "nan": # FIXME WTF?
-                    table.add_row(icon + row[context.obj[key]])
+                    table.add_row(icon + row[context.obj[key]], style = context.obj[key])
                 else:
                     return
 
@@ -637,24 +637,24 @@ def show(context, tid):
                 if str(row[context.obj[key]]) != "nan": # FIXME WTF?
                     tags = [icon+t for t in row[context.obj[key]].split(',')]
                     columns = richColumns(tags, expand = False)
-                    table.add_row(columns)
+                    table.add_row(columns, style = context.obj[key])
                 else:
                     return
 
+        add_row_text(table, 'status_key')
         add_row_text(table, 'details_key')
         add_row_list(table, 'tags_key', '🏷 ')
         add_row_text(table, 'deadline_key', '🗓')
         add_row_text(table, 'touched_key', ':calendar-text:')
 
         # Label content.
-        l = []
+        label = richText()
         if context.obj['id_key'] in context.obj['show_fields']:
-            l.append(str(tid))
+            label += richText(str(tid)+":", style = context.obj['id_key'])
         if context.obj['title_key'] in context.obj['show_fields']:
-            l.append(row[context.obj['title_key']])
-        label = ": ".join(l)
+            label += richText(" "+row[context.obj['title_key']], style = context.obj['title_key'])
 
-        panel = richPanel.fit(table, title = label, title_align="left")
+        panel = richPanel(table, title = label, title_align="left", expand = False, padding = (0,0))
         console.print(panel)
 
 
