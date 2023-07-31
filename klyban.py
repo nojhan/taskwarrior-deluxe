@@ -134,8 +134,8 @@ def check_id(context, param, value):
 @click.option('-h','--show-headers', is_flag=True, help="Show the headers.")
 @click.option('-s', '--show-keys'   , default='ID,TITLE,DETAILS,TAGS', type=str , show_default=True, help="Comma-separated, ordered list of fields that should be shown (use 'all' for everything).")
 @click.option('-g', '--highlight', type = int, default = None, help="Highlight a specific task.")
-@click.option('--highlight-mark', type = str, default = ':arrow_forward:', help="String used to highlight a specific task.")
-@click.option('-l', '--layout', type = click.Choice(['vertical-compact', 'vertical-spaced', 'horizontal-compact']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-spaced'
+@click.option('--highlight-mark', type = str, default = '▶', help="String used to highlight a specific task.")
+@click.option('-l', '--layout', type = click.Choice(['vertical-compact', 'vertical-spaced', 'horizontal-compact', 'horizontal-spaced']), default = 'vertical-compact', help="How to display tasks.") # TODO , 'horizontal-compact', 'horizontal-spaced'
 @click.option('-t', '--theme', type = click.Choice(['none', 'user', 'BW', 'BY', 'RW', 'nojhan'], case_sensitive=False), default = 'none', help="How to display tasks.")
 # Low-level configuration options.
 @click.option('--status-key'  , default='STATUS'  , type=str, show_default=True, help="Header key defining the status of tasks.")
@@ -181,6 +181,7 @@ def cli(context, **kwargs):
         'vertical-compact': VerticalCompact,
         'vertical-spaceds': VerticalSpaced,
         'horizontal-compact': HorizontalCompact,
+        'horizontal-spaced': HorizontalSpaced,
     }
 
     context.obj['themes'] = {
@@ -246,8 +247,8 @@ def cli(context, **kwargs):
             context.obj['tags_key']: 'color(27)',
             context.obj['deadline_key']: 'white',
             context.obj['touched_key']: 'color(240)',
-            'row_odd' : '', # on #262121
-            'row_even': 'on #2d2929',
+            'row_odd': 'on #262121',
+            'row_even' : 'on #2d2929',
         }),
     }
     context.obj['theme'] = context.obj['themes'][kwargs['theme']]
@@ -445,7 +446,7 @@ class HorizontalCompact(Horizontal):
                         table.add_row(*items, style = row_style)
 
                     title = richText(section, style = self.context.obj['status_key'], overflow = 'ellipsis')
-                    panel = richPanel(table, title = title, title_align="left", border_style = self.context.obj['status_key'], box = self.panel_box, expand = True)
+                    panel = richPanel(table, title = title, title_align="left", border_style = self.context.obj['status_key'], box = self.panel_box, expand = True, padding = (0,0))
 
                     sections.append(richLayout(panel, name = section))
 
@@ -464,6 +465,7 @@ class HorizontalCompact(Horizontal):
             if letters != set({'m', '[', '\x1b', '│', '1', '3', '0', ' ', ';'}):
                 nb_lines += 1
 
+        # FIXME get rid of the space padding added by the panel, even without border.
         superpan = richPanel(layout, height = nb_lines, box = box.SIMPLE, border_style = 'none')
         return superpan
 
@@ -472,7 +474,124 @@ class HorizontalSpaced(Horizontal):
         super().__init__(context, table_box = None, show_lines = False, panel_box = box.ROUNDED)
 
     def __rich__(self):
-        pass
+        df = self.context.obj['data']
+
+        # Show the kanban tables.
+        if df.empty:
+            return "No task."
+
+        sections = []
+
+        if self.context.obj['highlight'] is not None:
+            df.loc[self.context.obj['highlight'], 'H'] = self.contex.obj['highlight_mark']
+
+        # Group by status.
+        tables = df.groupby(self.context.obj['status_key'])
+        # Loop over the asked ordered status groups.
+        for section in self.context.obj['status_list']: # Ordered.
+            if section in tables.groups:
+                df = tables.get_group(section)
+
+                # Bring back TID as a regular column.
+                df = df.reset_index().fillna("")
+
+                # Always consider the hint column.
+                if 'H' not in self.context.obj['show_keys']:
+                    self.context.obj['show_keys'] = ['H'] + self.context.obj['show_keys']
+
+                console = rconsole.Console()
+
+                try:
+                    # Print asked columns.
+                    t = df[self.context.obj['show_keys']]
+                except KeyError as e:
+                    msg = ""
+                    for section in self.context.obj['show_keys']:
+                        if section not in df.columns:
+                            msg += "cannot show field `{}`, not found in `{}` ".format(section, self.context.obj['input'])
+                    error("INVALID_KEY", msg)
+                else:
+                    if len(df.index) <= 1:
+                        show_lines = False
+                        table_box = None
+                    else:
+                        show_lines = self.show_lines
+                        table_box = self.table_box
+
+                    table = richTable(show_header = False, box = None, show_lines = False, expand = True, row_styles = ['row_odd', 'row_even'])
+                    table.add_column('')
+
+                    # One task_table per task.
+                    for i,task in t.iterrows():
+
+                        task_table = richTable(show_header = self.context.obj['show_headers'], box = table_box, show_lines = show_lines, expand = True, padding = (0,0))
+
+                        # One column.
+                        task_table.add_column('')
+
+                        nb_title_keys = 0
+                        for h in self.context.obj['show_keys']:
+                            if h in ['H', self.context.obj['id_key'], self.context.obj['title_key']]:
+                                nb_title_keys += 1
+
+                        task_title = []
+                        for h in self.context.obj['show_keys']:
+                            item = str(task[h])
+
+                            if h == 'H':
+                                task_title.append(richText(task['H'], style = 'H'))
+                                if len(task_title) == nb_title_keys:
+                                    task_table.add_row(task_title[0]+task_title[1]+' '+task_title[2], style = h)
+                                    task_title = []
+                                continue
+                            elif h == self.context.obj['id_key']:
+                                task_title.append(richText(item, style = h))
+                                if len(task_title) == nb_title_keys:
+                                    task_table.add_row(task_title[0]+task_title[1]+' '+task_title[2], style = h)
+                                    task_title = []
+                                continue
+                            elif h == self.context.obj['title_key']:
+                                task_title.append(richText(item, style = h))
+                                if len(task_title) == nb_title_keys:
+                                    task_table.add_row(task_title[0]+task_title[1]+' '+task_title[2], style = h)
+                                    task_title = []
+                                continue
+
+                            if len(task_title) == nb_title_keys:
+                                task_table.add_row(task_title[0]+task_title[1]+' '+task_title[2], style = h)
+                                task_title = []
+                            else:
+                                task_table.add_row(item, style = h)
+
+                        if task['H']:
+                            row_style = 'matching'
+                        else:
+                            row_style = None
+                        table.add_row(task_table, style = row_style)
+
+                    title = richText(section, style = self.context.obj['status_key'], overflow = 'ellipsis')
+                    panel = richPanel(table, title = title, title_align="left", border_style = self.context.obj['status_key'], box = self.panel_box, expand = True, padding = (0,0))
+
+                    sections.append(richLayout(panel, name = section))
+
+        layout = richLayout()
+        layout.split_row(*sections)
+
+        # FIXME ugly hack: pre-render the englobing panel, then count the number of "non empty" lines.
+        fakepan = richPanel(layout, box = box.SIMPLE, border_style = 'none')
+        console = rconsole.Console(theme = self.context.obj['theme'], no_color = True)
+        with console.capture() as capture:
+            console.print(fakepan)
+        lines = capture.get().split('\n')
+        nb_lines = 0
+        for line in lines:
+            letters = set(line)
+            if letters != set({'m', '[', '\x1b', '│', '1', '3', '0', ' ', ';'}):
+                nb_lines += 1
+
+        # FIXME get rid of the space padding added by the panel, even without border.
+        superpan = richPanel(layout, height = nb_lines, box = box.SIMPLE, border_style = 'none')
+        return superpan
 
 
 @cli.command()
@@ -745,7 +864,7 @@ def filter(context, regex):
 
 @cli.command()
 @click.argument('REGEX', required=True, type=str)
-@click.option('-m', '--mark', type = str, default = ':arrow_forward:', help="String used to highlight matching tasks.")
+@click.option('-m', '--mark', type = str, default = '▶', help="String used to highlight matching tasks.")
 @click.pass_context
 def find(context, regex, mark):
     """Point out tasks containing a string matching the given regexp in any of the showed columns.
