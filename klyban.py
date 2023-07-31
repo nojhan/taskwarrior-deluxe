@@ -316,7 +316,7 @@ class Vertical(Layout):
         sections = []
 
         if self.context.obj['highlight'] is not None:
-            df.loc[self.context.obj['highlight'], 'H'] = self.contex.obj['highlight_mark']
+            df.loc[self.context.obj['highlight'], 'H'] = self.context.obj['highlight_mark']
 
         # Group by status.
         tables = df.groupby(self.context.obj['status_key'])
@@ -487,7 +487,7 @@ class HorizontalSpaced(Horizontal):
         sections = []
 
         if self.context.obj['highlight'] is not None:
-            df.loc[self.context.obj['highlight'], 'H'] = self.contex.obj['highlight_mark']
+            df.loc[self.context.obj['highlight'], 'H'] = self.context.obj['highlight_mark']
 
         # Group by status.
         tables = df.groupby(self.context.obj['status_key'])
