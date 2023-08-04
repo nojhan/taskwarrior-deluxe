@@ -15,3 +15,4 @@
 15,"TODO","hide old done tasks","Hide tasks with last status that haven't been touched since a long time.","feat","","2023-07-30T10:16:39.517669"
 16,"TODO","sort by priority","Add a priority column and a sorting option.","feat","","2023-07-31T09:19:16.258603"
 17,"TODO","fix layout filtering","When changing themes, the layout filtering hack in Horizontal* does not work anymore.","bug","","2023-07-31T17:40:15.708249"
+18,"TODO","normalized config files","Handle config files: 1) current dir, 2) upper dir(s) stack, 3) home config, 4) system config, 5) command line","feat","","2023-08-04T19:47:29.684559"
