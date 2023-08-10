@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 import argparse
@@ -9,31 +10,16 @@ import rich
 from rich.console import Console
 from rich.columns import Columns
 
-# class make:
-#     def carder(card, **kwargs):
-#         def f(task):
-#             return card(task, **kwargs)
-#         return f
-
-#     def stacker(stack, **kwargs):
-#         def f(tasks):
-#             return stack(tasks, **kwargs)
-#         return f
-
-#     def sectioner(section, **kwargs):
-#         def f(tasks, field, values):
-#             return section(tasks, field, values, **kwargs)
-#         return f
-
 class Widget:
     def __init__(self, order, group = None):
         self.order = order
         self.group = group
 
 class Tasker(Widget):
-    def __init__(self, show_only, order, group = None):
+    def __init__(self, show_only, order, group = None, touched = []):
         super().__init__(order, group)
         self.show_only = show_only
+        self.touched = touched
 
     def __call__(self, task):
         raise NotImplementedError
@@ -58,8 +44,8 @@ class Sectioner(Widget):
 class task:
 
     class Card(Tasker):
-        def __init__(self, show_only, order = None):
-            super().__init__(show_only, order, group = None)
+        def __init__(self, show_only, order = None, touched = []):
+            super().__init__(show_only, order, group = None, touched = touched)
 
         def __call__(self, task):
             if not self.show_only:
@@ -73,6 +59,9 @@ class task:
             else:
                 desc = task["description"]
                 title = sid
+
+            if sid in touched:
+                title = "*"+title+"*"
 
             segments = []
             for key in self.show_only:
@@ -171,37 +160,12 @@ class group:
 
             return groups
 
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(
-        description="XXX",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-
-    main = parser.add_argument_group('Main')
-    main.add_argument("-s", "--show", metavar="columns", type=str, default="id,urgency,description,tags", nargs=1,
-            help="Ordered list of columns to show.")
-
-    config = parser.add_argument_group('Config')
-    config.add_argument("-d", "--data", metavar="FILE", type=str, default=".task", nargs=1,
-            help="The input data file.")
-    config.add_argument("--list-separator", metavar="CHARACTER", type=str, default=",", nargs=1,
-            help="Separator used for lists that are passed as options arguments.")
-
-    asked = parser.parse_args()
-
+def call_taskwarrior(args:list[str] = ['export']) -> str:
+    # Local file.
     env = os.environ.copy()
     env["TASKDATA"] = asked.data
 
-    cmd = ['task', 'export']
-
-    showed = asked.show.split(asked.list_separator)
-    if not showed:
-        show_only = None
-    else:
-        show_only = showed
-
+    cmd = ['task'] + args
     try:
         p = subprocess.Popen( " ".join(cmd),
             stdout=subprocess.PIPE,
@@ -214,18 +178,67 @@ if __name__ == "__main__":
     except subprocess.CalledProcessError as exc:
         print("ERROR:", exc.returncode, exc.output, err)
         sys.exit(exc.returncode)
-
     else:
+        return out.decode('utf-8')
+
+
+def get_data():
+    out = call_taskwarrior(['export'])
+    try:
         jdata = json.loads(out)
-        print(json.dumps(jdata, indent=4))
+    except json.decoder.JSONDecodeError as exc:
+        print("ERROR:", exc.returncode, exc.output)
+    else:
+        return jdata
 
-        tasker = task.Card(show_only)
-        stacker = stack.Vertical(tasker)
-        group_by_status = group.Status()
-        sort_on_values = sort.OnValues(["pending","started","completed"])
-        sectioner = sections.Vertical(stacker, sort_on_values, group_by_status)
 
-        console = Console()
-        console.rule("taskwarrior-fancy")
-        console.print(sectioner(jdata))
+def parse_touched(out):
+    return re.findall('Modifying task ([0-9]+)', out)
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(
+        description="XXX",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.add_argument("-s", "--show", metavar="columns", type=str, default="id,urgency,description,tags", nargs=1,
+            help="Ordered list of columns to show.")
+
+    config = parser.add_argument_group('configuration options')
+    config.add_argument("-d", "--data", metavar="FILE", type=str, default=".task", nargs=1,
+            help="The input data file.")
+    config.add_argument("--list-separator", metavar="CHARACTER", type=str, default=",", nargs=1,
+            help="Separator used for lists that are passed as options arguments.")
+
+    # Capture whatever remains.
+    parser.add_argument('cmd', nargs="*")
+
+    asked = parser.parse_args()
+
+    # First pass arguments to taskwarrior and let it do its magic.
+    out = call_taskwarrior(asked.cmd)
+    print(out)
+    touched = parse_touched(out)
+
+    # Then get the resulting data.
+    jdata = get_data()
+    # print(json.dumps(jdata, indent=4))
+
+    showed = asked.show.split(asked.list_separator)
+    if not showed:
+        show_only = None
+    else:
+        show_only = showed
+
+    tasker = task.Card(show_only, touched)
+    stacker = stack.Vertical(tasker)
+    group_by_status = group.Status()
+    sort_on_values = sort.OnValues(["pending","started","completed"])
+    sectioner = sections.Vertical(stacker, sort_on_values, group_by_status)
+
+    console = Console()
+    console.rule("taskwarrior-fancy")
+    console.print(sectioner(jdata))
 
