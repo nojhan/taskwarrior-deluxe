@@ -1,8 +1,11 @@
+#!/usr/bin/env python3
+
 import os
 import re
 import sys
 import json
 import argparse
+import textwrap
 import subprocess
 
 import rich
@@ -44,8 +47,9 @@ class Sectioner(Widget):
 class task:
 
     class Card(Tasker):
-        def __init__(self, show_only, order = None, touched = []):
+        def __init__(self, show_only, order = None, touched = [], wrap_width = 25):
             super().__init__(show_only, order, group = None, touched = touched)
+            self.wrap_width = wrap_width
 
         def __call__(self, task):
             if not self.show_only:
@@ -59,6 +63,8 @@ class task:
             else:
                 desc = task["description"]
                 title = sid
+
+            desc = "\n".join(textwrap.wrap(desc.strip(), self.wrap_width))
 
             if sid in touched:
                 title = "*"+title+"*"
@@ -81,7 +87,7 @@ class task:
             # FIXME Columns does not fit.
             # cols = Columns(segments)
             cols = rich.console.Group(*segments, fit = True)
-            grp = rich.console.Group(desc.strip(), cols, fit = True)
+            grp = rich.console.Group(desc, cols, fit = True)
             panel = rich.panel.Panel(grp, title = title,
                 title_align="left", expand = False, padding = (0,1))
 
@@ -218,7 +224,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("-s", "--show", metavar="columns", type=str, default="id,urgency,description,tags", nargs=1,
+    parser.add_argument("-s", "--show", metavar="columns", type=str, default="id,description,tags", nargs=1,
             help="Ordered list of columns to show.")
 
     config = parser.add_argument_group('configuration options')
@@ -226,6 +232,10 @@ if __name__ == "__main__":
             help="The input data file.")
     config.add_argument("--list-separator", metavar="CHARACTER", type=str, default=",", nargs=1,
             help="Separator used for lists that are passed as options arguments.")
+
+    layouts = parser.add_argument_group('layout options')
+    layouts.add_argument('--card-flat-wrap', metavar="NB", type=int, default=25,
+            help="Number of character at which to wrap the description of Flat Cards.")
 
     # Capture whatever remains.
     parser.add_argument('cmd', nargs="*")
@@ -248,7 +258,7 @@ if __name__ == "__main__":
     else:
         show_only = showed
 
-    tasker = task.Card(show_only, touched)
+    tasker = task.Card(show_only, touched, wrap_width = asked.card_flat_wrap)
     stacker = stack.Flat(tasker)
     group_by_status = group.Status()
     sort_on_values = sort.OnValues(["pending","started","completed"])
