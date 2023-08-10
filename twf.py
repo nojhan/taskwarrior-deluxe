@@ -124,10 +124,31 @@ class sections:
         def __call__(self, tasks):
             sections = []
             groups = self.group(tasks)
-            for val in self.order():
-                if val in groups:
-                    sections.append( rich.panel.Panel(self.stacker(groups[val]), title = val.upper(), title_align = "left", expand = False))
+            for key in self.order():
+                if key in groups:
+                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = key.upper(), title_align = "left", expand = False))
             return rich.console.Group(*sections)
+
+    class Horizontal(Sectioner):
+        def __init__(self, stacker, order, group):
+            super().__init__(stacker, order, group)
+
+        def __call__(self, tasks):
+            sections = []
+            groups = self.group(tasks)
+            table = rich.table.Table(box = None, show_header = False, show_lines = False)
+            keys = []
+            for key in self.order():
+                if key in groups:
+                    table.add_column(key)
+                    keys.append(key)
+
+            row = []
+            for k in keys:
+                row.append( rich.panel.Panel(self.stacker(groups[k]), title = k.upper(), title_align = "left", expand = True))
+
+            table.add_row(*row)
+            return table
 
 class SectionSorter:
     def __call__(self):
@@ -259,10 +280,14 @@ if __name__ == "__main__":
         show_only = showed
 
     tasker = task.Card(show_only, touched, wrap_width = asked.card_flat_wrap)
+
+    # stacker = stack.Vertical(tasker)
     stacker = stack.Flat(tasker)
+
     group_by_status = group.Status()
     sort_on_values = sort.OnValues(["pending","started","completed"])
-    sectioner = sections.Vertical(stacker, sort_on_values, group_by_status)
+    # sectioner = sections.Vertical(stacker, sort_on_values, group_by_status)
+    sectioner = sections.Horizontal(stacker, sort_on_values, group_by_status)
 
     console = Console()
     console.rule("taskwarrior-fancy")
