@@ -100,7 +100,7 @@ class stack:
             super().__init__(tasker, order = None, group = None)
 
         def __call__(self, tasks):
-            stack = rich.table.Table()
+            stack = rich.table.Table(box = None, show_header = False, show_lines = False)
             stack.add_column("Tasks")
             for task in tasks:
                stack.add_row( self.tasker(task) )
@@ -149,6 +149,27 @@ class Grouper:
                 else:
                     groups[ task[self.field] ] = [task]
         return groups
+
+class group:
+    class Status(Grouper):
+        def __init__(self):
+            super().__init__("status")
+
+        def __call__(self, tasks):
+            groups = {}
+            for task in tasks:
+                if "start" in task:
+                    if "started" in groups:
+                        groups["started"].append(task)
+                    else:
+                        groups["started"] = [task]
+                elif self.field in task:
+                    if task[self.field] in groups:
+                        groups[ task[self.field] ].append(task)
+                    else:
+                        groups[ task[self.field] ] = [task]
+
+            return groups
 
 
 if __name__ == "__main__":
@@ -200,8 +221,8 @@ if __name__ == "__main__":
 
         tasker = task.Card(show_only)
         stacker = stack.Vertical(tasker)
-        group_by_status = Grouper("status")
-        sort_on_values = sort.OnValues(["pending","completed"])
+        group_by_status = group.Status()
+        sort_on_values = sort.OnValues(["pending","started","completed"])
         sectioner = sections.Vertical(stacker, sort_on_values, group_by_status)
 
         console = Console()
