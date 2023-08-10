@@ -71,13 +71,17 @@ class task:
                     if type(val) == str:
                         segments.append(segment+t)
                     elif type(val) == list:
-                        g = Columns([f"+{t}" for t in val])
+                        # FIXME Columns does not fit.
+                        # g = Columns([f"+{t}" for t in val], expand = False)
+                        g = rich.console.Group(*[f"+{t}" for t in val], fit = True)
                         segments.append(g)
                     else:
                         segments.append(segment+str(val))
 
-            cols = Columns(segments)
-            grp = rich.console.Group(desc.strip(), cols)
+            # FIXME Columns does not fit.
+            # cols = Columns(segments)
+            cols = rich.console.Group(*segments, fit = True)
+            grp = rich.console.Group(desc.strip(), cols, fit = True)
             panel = rich.panel.Panel(grp, title = title,
                 title_align="left", expand = False, padding = (0,1))
 
@@ -89,11 +93,22 @@ class stack:
             super().__init__(tasker, order = None, group = None)
 
         def __call__(self, tasks):
-            stack = rich.table.Table(box = None, show_header = False, show_lines = False)
+            stack = rich.table.Table(box = None, show_header = False, show_lines = False, expand = True)
             stack.add_column("Tasks")
             for task in tasks:
                stack.add_row( self.tasker(task) )
             return stack
+
+    class Flat(Stacker):
+        def __init__(self, tasker):
+            super().__init__(tasker, order = None, group = None)
+
+        def __call__(self, tasks):
+            stack = []
+            for task in tasks:
+               stack.append( self.tasker(task) )
+            cols = rich.columns.Columns(stack)
+            return cols
 
 class sections:
     class Vertical(Sectioner):
@@ -105,7 +120,7 @@ class sections:
             groups = self.group(tasks)
             for val in self.order():
                 if val in groups:
-                    sections.append( rich.panel.Panel(self.stacker(groups[val]), title = val) )
+                    sections.append( rich.panel.Panel(self.stacker(groups[val]), title = val.upper(), title_align = "left", expand = False))
             return rich.console.Group(*sections)
 
 class SectionSorter:
@@ -219,7 +234,8 @@ if __name__ == "__main__":
 
     # First pass arguments to taskwarrior and let it do its magic.
     out = call_taskwarrior(asked.cmd)
-    print(out)
+    if "Description" not in out:
+        print(out)
     touched = parse_touched(out)
 
     # Then get the resulting data.
@@ -233,7 +249,7 @@ if __name__ == "__main__":
         show_only = showed
 
     tasker = task.Card(show_only, touched)
-    stacker = stack.Vertical(tasker)
+    stacker = stack.Flat(tasker)
     group_by_status = group.Status()
     sort_on_values = sort.OnValues(["pending","started","completed"])
     sectioner = sections.Vertical(stacker, sort_on_values, group_by_status)
