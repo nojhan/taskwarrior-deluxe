@@ -55,76 +55,85 @@ class Sectioner(Widget):
         raise NotImplementedError
 
 
-class Card(Tasker):
-    def __init__(self, show_only, order = None):
-        super().__init__(show_only, order, group = None)
+class task:
 
-    def __call__(self, task):
-        if not self.show_only:
-            # Show all existing fields.
-            self.show_only = task.keys()
+    class Card(Tasker):
+        def __init__(self, show_only, order = None):
+            super().__init__(show_only, order, group = None)
 
-        sid = str(task["id"])
-        if ':' in task["description"]:
-            short, desc = task["description"].split(":")
-            title = ":".join([sid,short.strip()])
-        else:
-            desc = task["description"]
-            title = sid
+        def __call__(self, task):
+            if not self.show_only:
+                # Show all existing fields.
+                self.show_only = task.keys()
 
-        segments = []
-        for key in self.show_only:
-            if key in task.keys() and key not in ["id", "description"]:
-                val = task[key]
-                segment = f"{key}: "
-                if type(val) == str:
-                    segments.append(segment+t)
-                elif type(val) == list:
-                    g = Columns([f"+{t}" for t in val])
-                    segments.append(g)
-                else:
-                    segments.append(segment+str(val))
+            sid = str(task["id"])
+            if ':' in task["description"]:
+                short, desc = task["description"].split(":")
+                title = ":".join([sid,short.strip()])
+            else:
+                desc = task["description"]
+                title = sid
 
-        cols = Columns(segments)
-        grp = rich.console.Group(desc.strip(), cols)
-        panel = rich.panel.Panel(grp, title = title,
-            title_align="left", expand = False, padding = (0,1))
+            segments = []
+            for key in self.show_only:
+                if key in task.keys() and key not in ["id", "description"]:
+                    val = task[key]
+                    segment = f"{key}: "
+                    if type(val) == str:
+                        segments.append(segment+t)
+                    elif type(val) == list:
+                        g = Columns([f"+{t}" for t in val])
+                        segments.append(g)
+                    else:
+                        segments.append(segment+str(val))
 
-        return panel
+            cols = Columns(segments)
+            grp = rich.console.Group(desc.strip(), cols)
+            panel = rich.panel.Panel(grp, title = title,
+                title_align="left", expand = False, padding = (0,1))
 
-class VerticalStack(Stacker):
-    def __init__(self, tasker):
-        super().__init__(tasker, order = None, group = None)
+            return panel
 
-    def __call__(self, tasks):
-        stack = rich.table.Table()
-        stack.add_column("Tasks")
-        for task in tasks:
-           stack.add_row( self.tasker(task) )
-        return stack
+class stack:
+    class Vertical(Stacker):
+        def __init__(self, tasker):
+            super().__init__(tasker, order = None, group = None)
 
-class VerticalSections(Sectioner):
-    def __init__(self, stacker, order, group):
-        super().__init__(stacker, order, group)
+        def __call__(self, tasks):
+            stack = rich.table.Table()
+            stack.add_column("Tasks")
+            for task in tasks:
+               stack.add_row( self.tasker(task) )
+            return stack
 
-    def __call__(self, tasks):
-        sections = []
-        groups = self.group(tasks)
-        for val in self.order():
-            if val in groups:
-                sections.append( rich.panel.Panel(self.stacker(groups[val]), title = val) )
-        return rich.console.Group(*sections)
+class sections:
+    class Vertical(Sectioner):
+        def __init__(self, stacker, order, group):
+            super().__init__(stacker, order, group)
+
+        def __call__(self, tasks):
+            sections = []
+            groups = self.group(tasks)
+            for val in self.order():
+                if val in groups:
+                    sections.append( rich.panel.Panel(self.stacker(groups[val]), title = val) )
+            return rich.console.Group(*sections)
 
 class SectionSorter:
     def __call__(self):
         raise NotImplementedError
 
-class OnValues(SectionSorter):
-    def __init__(self, values):
-        self.values = values
+class sort:
+    class Tasks:
+        def make(self, tasks, field, reverse = False):
+            return sorted(tasks, key = lambda t: t[field], reverse = reverse)
 
-    def __call__(self):
-        return self.values
+    class OnValues(SectionSorter):
+        def __init__(self, values):
+            self.values = values
+
+        def __call__(self):
+            return self.values
 
 class Grouper:
     """Group tasks by field values."""
@@ -140,91 +149,6 @@ class Grouper:
                 else:
                     groups[ task[self.field] ] = [task]
         return groups
-
-class TasksSorter:
-    def make(self, tasks, field, reverse = False):
-        return sorted(tasks, key = lambda t: t[field], reverse = reverse)
-
-
-# class layout:
-#     def __init__(self, carder, stacker, sectioner)
-#         self.carder = carder
-#         self.stacker = stacker
-#         self.sectioner = sectioner
-
-#     def __call__(self, sec_group, sec_sort, sub_group, sub_sort):
-#         self.section(self.stack(), 
-
-# def group_by(tasks, field):
-#     """Group tasks by field values."""
-#     groups = {}
-#     for task in tasks:
-#         if field in task:
-#             if task[field] in groups:
-#                 groups[ task[field] ].append(task)
-#             else:
-#                 groups[ task[field] ] = [task]
-#     return groups
-
-# def sort_by(tasks, field = "urgency", reverse = False):
-#     return sorted(tasks, key = lambda t: t[field], reverse = reverse)
-
-##### Widgets #####
-
-# class packed:
-#     def card(task, in_widget = None, show_only = None):
-#         """Widget being a single task."""
-
-#         if not show_only:
-#             # Show all existing fields.
-#             show_only = task.keys()
-
-#         sid = str(task["id"])
-#         if ':' in task["description"]:
-#             short, desc = task["description"].split(":")
-#             title = ":".join([sid,short.strip()])
-#         else:
-#             desc = task["description"]
-#             title = sid
-
-#         segments = []
-#         for key in show_only:
-#             if key in task.keys() and key not in ["id", "description"]:
-#                 val = task[key]
-#                 segment = f"{key}: "
-#                 if type(val) == str:
-#                     segments.append(segment+t)
-#                 elif type(val) == list:
-#                     g = Columns([f"+{t}" for t in val])
-#                     segments.append(g)
-#                 else:
-#                     segments.append(segment+str(val))
-
-#         cols = Columns(segments)
-#         grp = rich.console.Group(desc.strip(), cols)
-#         panel = rich.panel.Panel(grp, title = title,
-#             title_align="left", expand = False, padding = (0,1))
-
-#         return panel
-
-
-#     def stack(tasks, in_widget = None, show_only = None):
-#         """Widget being a stack of tasks widgets."""
-#         stack = rich.table.Table()
-#         stack.add_column("Tasks")
-#         for task in tasks:
-#            stack.add_row( card(task, in_widget, show_only) )
-#         return stack
-
-
-#     def sections(tasks, field, values, in_widget = None, show_only = None):
-#         """Widget being a panel of stack widgets."""
-#         sections = []
-#         groups = group_by(tasks, field)
-#         for val in values:
-#             if val in groups:
-#                 sections.append( rich.panel.Panel(stack(groups[val], in_widget, show_only), title = val) )
-#         return rich.console.Group(*sections)
 
 
 if __name__ == "__main__":
@@ -274,11 +198,11 @@ if __name__ == "__main__":
         jdata = json.loads(out)
         print(json.dumps(jdata, indent=4))
 
-        tasker = Card(show_only)
-        stacker = VerticalStack(tasker)
+        tasker = task.Card(show_only)
+        stacker = stack.Vertical(tasker)
         group_by_status = Grouper("status")
-        sort_on_values = OnValues(["pending","completed"])
-        sectioner = VerticalSections(stacker, sort_on_values, group_by_status)
+        sort_on_values = sort.OnValues(["pending","completed"])
+        sectioner = sections.Vertical(stacker, sort_on_values, group_by_status)
 
         console = Console()
         console.rule("taskwarrior-fancy")
