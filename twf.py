@@ -45,7 +45,6 @@ class Sectioner(Widget):
 
 
 class task:
-
     class Card(Tasker):
         def __init__(self, show_only, order = None, touched = [], wrap_width = 25):
             super().__init__(show_only, order, group = None, touched = touched)
@@ -93,7 +92,47 @@ class task:
 
             return panel
 
+    class Raw(Tasker):
+        def __init__(self, show_only, order = None, touched = []):
+            super().__init__(show_only, order, group = None, touched = touched)
+
+        def __call__(self, task):
+            if not self.show_only:
+                # Show all existing fields.
+                self.show_only = task.keys()
+
+            raw = {}
+            for k in self.show_only:
+                if k in task:
+                    raw[k] = task[k]
+                else:
+                    raw[k] = None
+
+            return raw
+
 class stack:
+    class RawTable(Stacker):
+        def __init__(self, tasker):
+            super().__init__(tasker, order = None, group = None)
+
+        def __call__(self, tasks):
+            keys = self.tasker.show_only
+
+            table = rich.table.Table(box = None, show_header = True, show_lines = True, expand = True)
+            for k in keys:
+                table.add_column(k)
+
+            for task in tasks:
+                row = []
+                for k in keys:
+                    if k in task:
+                        row.append( self.tasker(task)[k] )
+                    else:
+                        row.append("none")
+                table.add_row(*[str(i) for i in row])
+            return table
+
+
     class Vertical(Stacker):
         def __init__(self, tasker):
             super().__init__(tasker, order = None, group = None)
@@ -279,10 +318,12 @@ if __name__ == "__main__":
     else:
         show_only = showed
 
-    tasker = task.Card(show_only, touched, wrap_width = asked.card_flat_wrap)
+    # tasker = task.Card(show_only, touched, wrap_width = asked.card_flat_wrap)
+    tasker = task.Raw(show_only, touched)
 
     # stacker = stack.Vertical(tasker)
-    stacker = stack.Flat(tasker)
+    # stacker = stack.Flat(tasker)
+    stacker = stack.RawTable(tasker)
 
     group_by_status = group.Status()
     sort_on_values = sort.OnValues(["pending","started","completed"])
