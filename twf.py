@@ -118,17 +118,29 @@ class stack:
         def __call__(self, tasks):
             keys = self.tasker.show_only
 
-            table = rich.table.Table(box = None, show_header = True, show_lines = True, expand = True)
+            table = rich.table.Table(box = None, show_header = False, show_lines = True, expand = True)
+            table.add_column('H')
             for k in keys:
                 table.add_column(k)
 
             for task in tasks:
-                row = []
+                taskers = self.tasker(task)
+                if str(task['id']) in self.tasker.touched:
+                    row = ['>']
+                else:
+                    row = ['']
+
                 for k in keys:
                     if k in task:
-                        row.append( self.tasker(task)[k] )
+                        val = taskers[k]
+                        if type(val) == str:
+                            row.append( val )
+                        elif type(val) == list:
+                            row.append( " ".join(val) )
+                        else:
+                            row.append( str(val) )
                     else:
-                        row.append("none")
+                        row.append("")
                 table.add_row(*[str(i) for i in row])
             return table
 
@@ -305,8 +317,9 @@ if __name__ == "__main__":
     # First pass arguments to taskwarrior and let it do its magic.
     out = call_taskwarrior(asked.cmd)
     if "Description" not in out:
-        print(out)
+        print(out.strip())
     touched = parse_touched(out)
+    # print("Touched:",touched)
 
     # Then get the resulting data.
     jdata = get_data()
@@ -318,8 +331,8 @@ if __name__ == "__main__":
     else:
         show_only = showed
 
-    # tasker = task.Card(show_only, touched, wrap_width = asked.card_flat_wrap)
-    tasker = task.Raw(show_only, touched)
+    # tasker = task.Card(show_only, touched = touched, wrap_width = asked.card_flat_wrap)
+    tasker = task.Raw(show_only, touched = touched)
 
     # stacker = stack.Vertical(tasker)
     # stacker = stack.Flat(tasker)
