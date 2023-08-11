@@ -286,7 +286,7 @@ def get_data():
 
 
 def parse_touched(out):
-    return re.findall('Modifying task ([0-9]+)', out)
+    return re.findall('[ModifyingCreated]+ task ([0-9]+)', out)
 
 
 if __name__ == "__main__":
