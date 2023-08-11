@@ -36,3 +36,6 @@ time 1691774223
 old [description:"semantic allow tags starting with a hash to refer to a github issue or PR" entry:"1691773642" modified:"1691774205" status:"pending" tags:"feat" tags_feat:"x" uuid:"06cf70a9-4f0e-4b32-b7bb-d1799803665c"]
 new [description:"semantic tags : allow tags starting with a hash to refer to a github issue or PR" entry:"1691773642" modified:"1691774223" status:"pending" tags:"feat" tags_feat:"x" uuid:"06cf70a9-4f0e-4b32-b7bb-d1799803665c"]
 ---
+time 1691774377
+new [description:"styling: apply configurable styles to each field and state with semantics" entry:"1691774377" modified:"1691774377" status:"pending" tags:"feat" tags_feat:"x" uuid:"17819637-4f4a-4e46-8622-12d8243c54da"]
+---

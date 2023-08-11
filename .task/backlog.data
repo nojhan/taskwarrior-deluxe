@@ -9,3 +9,4 @@
 {"description":"tags starting with a hash to refer to a github issue or PR","entry":"20230811T170722Z","modified":"20230811T171630Z","status":"pending","uuid":"06cf70a9-4f0e-4b32-b7bb-d1799803665c","tags":["feat"]}
 {"description":"semantic allow tags starting with a hash to refer to a github issue or PR","entry":"20230811T170722Z","modified":"20230811T171645Z","status":"pending","uuid":"06cf70a9-4f0e-4b32-b7bb-d1799803665c","tags":["feat"]}
 {"description":"semantic tags : allow tags starting with a hash to refer to a github issue or PR","entry":"20230811T170722Z","modified":"20230811T171703Z","status":"pending","uuid":"06cf70a9-4f0e-4b32-b7bb-d1799803665c","tags":["feat"]}
+{"description":"styling: apply configurable styles to each field and state with semantics","entry":"20230811T171937Z","modified":"20230811T171937Z","status":"pending","uuid":"17819637-4f4a-4e46-8622-12d8243c54da","tags":["feat"]}

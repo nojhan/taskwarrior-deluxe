@@ -4,3 +4,4 @@
 [description:"sort by urgency" entry:"1691773782" modified:"1691773782" status:"pending" tags:"feat" tags_feat:"x" uuid:"4f041f52-739a-4aca-94e6-164f43e61866"]
 [description:"config file.s" entry:"1691773951" modified:"1691773951" status:"pending" tags:"feat" tags_feat:"x" uuid:"4d822c4a-d51e-4992-8a22-6e0167ac197a"]
 [description:"fix escaped add: when passing add with escapable characters, bug ensues." entry:"1691774077" modified:"1691774077" status:"pending" tags:"bug" tags_bug:"x" uuid:"79e1ba11-15ae-489f-9868-ab6adea40a91"]
+[description:"styling: apply configurable styles to each field and state with semantics" entry:"1691774377" modified:"1691774377" status:"pending" tags:"feat" tags_feat:"x" uuid:"17819637-4f4a-4e46-8622-12d8243c54da"]
