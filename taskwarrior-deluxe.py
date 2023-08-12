@@ -58,15 +58,15 @@ class task:
             sid = str(task["id"])
             if ':' in task["description"]:
                 short, desc = task["description"].split(":")
-                title = ":".join([sid,short.strip()])
+                title = rich.text.Text(sid, style='id') + ":" + rich.text.Text(short.strip(), style='title')
             else:
-                desc = task["description"]
-                title = sid
+                desc  = task["description"]
+                title = rich.text.Text(sid, style='id')
 
-            desc = "\n".join(textwrap.wrap(desc.strip(), self.wrap_width))
+            desc = rich.text.Text("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)), style='description')
 
-            if sid in touched:
-                title = rich.text.Text(title, style='touched')
+            # if sid in touched:
+            #     title = rich.text.Text(title, style='touched')
 
             segments = []
             for key in self.show_only:
@@ -78,7 +78,7 @@ class task:
                     elif type(val) == list:
                         # FIXME Columns does not fit.
                         # g = Columns([f"+{t}" for t in val], expand = False)
-                        g = rich.console.Group(*[rich.text.Text(f"+{t}", style=key) for t in val], fit = True)
+                        g = rich.console.Group(*[rich.text.Text(f"🔖 {t}", style=key) for t in val], fit = True)
                         segments.append(g)
                     else:
                         segments.append(rich.text.Text(segment+str(val), style=key))
@@ -89,7 +89,7 @@ class task:
             grp = rich.console.Group(desc, cols, fit = True)
             if sid in touched:
                 panel = rich.panel.Panel(grp, title = title,
-                    title_align="left", expand = False, padding = (0,1), border_style = 'touched')
+                    title_align="left", expand = False, padding = (0,1), border_style = 'touched', box = rich.box.DOUBLE_EDGE)
             else:
                 panel = rich.panel.Panel(grp, title = title,
                     title_align="left", expand = False, padding = (0,1))
@@ -138,7 +138,11 @@ class stack:
                     if k in task:
                         val = taskers[k]
                         if type(val) == str:
-                            row.append( rich.text.Text(val, style=k) )
+                            if k == 'description' and ':' in val:
+                                short, desc = val.split(':')
+                                row.append( rich.text.Text(short, style='title') +':'+ rich.text.Text(desc, style=k) )
+                            else:
+                                row.append( rich.text.Text(val, style=k) )
                         elif type(val) == list:
                             # FIXME use Columns if does not expand.
                             row.append( rich.text.Text(" ".join(val), style=k) )
@@ -182,7 +186,7 @@ class sections:
             groups = self.group(tasks)
             for key in self.order():
                 if key in groups:
-                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = key.upper(), title_align = "left", expand = False))
+                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = rich.text.Text(key.upper(), style=key), title_align = "left", expand = False))
             return rich.console.Group(*sections)
 
     class Horizontal(Sectioner):
@@ -201,7 +205,7 @@ class sections:
 
             row = []
             for k in keys:
-                row.append( rich.panel.Panel(self.stacker(groups[k]), title = k.upper(), title_align = "left", expand = True))
+                row.append( rich.panel.Panel(self.stacker(groups[k]), title = rich.text.Text(k.upper(), style=k), title_align = "left", expand = True))
 
             table.add_row(*row)
             return table
@@ -299,6 +303,7 @@ def get_themes(name = None):
         "none": {
             'touched': '',
             'id': '',
+            'title': '',
             'description': '',
             'entry': '',
             'modified': '',
@@ -313,13 +318,14 @@ def get_themes(name = None):
         "nojhan": {
             'touched': '#4E9A06',
             'id': 'bold color(214)',
-            'description': 'white',
+            'title': 'bold white',
+            'description': 'default',
             'entry': '',
             'modified': 'color(240)',
             'started': '',
             'status': 'bold italic white',
             'uuid': '',
-            'tags': 'color(27)',
+            'tags': 'color(33)',
             'urgency': 'color(219)',
             'row_odd': 'on #262121',
             'row_even' : 'on #2d2929',
@@ -329,6 +335,32 @@ def get_themes(name = None):
         return themes[name]
     else:
         return themes
+
+
+def get_layouts(kind = None, name = None):
+    available = {
+        "task": {
+            "Raw": task.Raw,
+            "Card": task.Card,
+        },
+        "stack": {
+            "RawTable": stack.RawTable,
+            "Vertical": stack.Vertical,
+            "Flat": stack.Flat,
+        },
+        "sections": {
+            "Vertical": sections.Vertical,
+            "Horizontal": sections.Horizontal,
+        },
+    }
+    if kind and name:
+        return available[kind][name]
+    elif kind:
+        return available[kind]
+    elif not kind and not name:
+        return available
+    else:
+        raise KeyError("cannot get layouts with 'name' only")
 
 
 if __name__ == "__main__":
@@ -341,17 +373,30 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--show", metavar="columns", type=str, default="id,description,tags", nargs=1,
             help="Ordered list of columns to show.")
 
-    config = parser.add_argument_group('configuration options')
-    config.add_argument("-d", "--data", metavar="FILE", type=str, default=".task", nargs=1,
+
+    config_grp = parser.add_argument_group('configuration options')
+
+    config_grp.add_argument("-d", "--data", metavar="FILE", type=str, default=".task", nargs=1,
             help="The input data file.")
-    config.add_argument("--list-separator", metavar="CHARACTER", type=str, default=",", nargs=1,
+
+    config_grp.add_argument("--list-separator", metavar="CHARACTER", type=str, default=",", nargs=1,
             help="Separator used for lists that are passed as options arguments.")
 
-    layouts = parser.add_argument_group('layout options')
-    layouts.add_argument('-t', '--theme', metavar='NAME', type=str, default='none',
+
+    layouts_grp = parser.add_argument_group('layout options')
+
+    layouts_grp.add_argument('-t', '--layout-task', metavar='NAME', type=str, default='Raw',
+            choices = get_layouts('task').keys(), help="Layout managing tasks.")
+    layouts_grp.add_argument('-k', '--layout-stack', metavar='NAME', type=str, default='RawTable',
+            choices = get_layouts('stack').keys(), help="Layout managing stacks.")
+    layouts_grp.add_argument('-c', '--layout-sections', metavar='NAME', type=str, default='Horizontal',
+            choices = get_layouts('sections').keys(), help="Layout managing sections.")
+
+    layouts_grp.add_argument('-T', '--theme', metavar='NAME', type=str, default='none',
             choices = get_themes().keys(), help="Color theme.")
-    layouts.add_argument('--card-flat-wrap', metavar="NB", type=int, default=25,
-            help="Number of character at which to wrap the description of Flat Cards.")
+
+    layouts_grp.add_argument('--card-wrap', metavar="NB", type=int, default=25,
+            help="Number of character at which to wrap the description of Cards tasks.")
 
     # Capture whatever remains.
     parser.add_argument('cmd', nargs="*")
@@ -376,18 +421,18 @@ if __name__ == "__main__":
         show_only = showed
 
     theme = rich.theme.Theme(get_themes(asked.theme))
+    layouts = get_layouts()
 
-    # tasker = task.Card(show_only, touched = touched, wrap_width = asked.card_flat_wrap)
-    tasker = task.Raw(show_only, touched = touched)
+    if asked.layout_task == "Card":
+        tasker = layouts['task'][asked.layout_task](show_only, touched = touched, wrap_width = asked.card_wrap)
+    else:
+        tasker = layouts['task'][asked.layout_task](show_only, touched = touched)
 
-    # stacker = stack.Vertical(tasker)
-    # stacker = stack.Flat(tasker)
-    stacker = stack.RawTable(tasker)
+    stacker = layouts['stack'][asked.layout_stack](tasker)
 
     group_by_status = group.Status()
     sort_on_values = sort.OnValues(["pending","started","completed"])
-    # sectioner = sections.Vertical(stacker, sort_on_values, group_by_status)
-    sectioner = sections.Horizontal(stacker, sort_on_values, group_by_status)
+    sectioner = layouts['sections'][asked.layout_sections](stacker, sort_on_values, group_by_status)
 
     console = Console(theme = theme)
     # console.rule("taskwarrior-deluxe")
