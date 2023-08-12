@@ -66,7 +66,7 @@ class task:
             desc = "\n".join(textwrap.wrap(desc.strip(), self.wrap_width))
 
             if sid in touched:
-                title = "*"+title+"*"
+                title = rich.text.Text(title, style='touched')
 
             segments = []
             for key in self.show_only:
@@ -74,21 +74,25 @@ class task:
                     val = task[key]
                     segment = f"{key}: "
                     if type(val) == str:
-                        segments.append(segment+t)
+                        segments.append(rich.text.Text(segment+t, style=key))
                     elif type(val) == list:
                         # FIXME Columns does not fit.
                         # g = Columns([f"+{t}" for t in val], expand = False)
-                        g = rich.console.Group(*[f"+{t}" for t in val], fit = True)
+                        g = rich.console.Group(*[rich.text.Text(f"+{t}", style=key) for t in val], fit = True)
                         segments.append(g)
                     else:
-                        segments.append(segment+str(val))
+                        segments.append(rich.text.Text(segment+str(val), style=key))
 
             # FIXME Columns does not fit.
             # cols = Columns(segments)
             cols = rich.console.Group(*segments, fit = True)
             grp = rich.console.Group(desc, cols, fit = True)
-            panel = rich.panel.Panel(grp, title = title,
-                title_align="left", expand = False, padding = (0,1))
+            if sid in touched:
+                panel = rich.panel.Panel(grp, title = title,
+                    title_align="left", expand = False, padding = (0,1), border_style = 'touched')
+            else:
+                panel = rich.panel.Panel(grp, title = title,
+                    title_align="left", expand = False, padding = (0,1))
 
             return panel
 
@@ -118,7 +122,7 @@ class stack:
         def __call__(self, tasks):
             keys = self.tasker.show_only
 
-            table = rich.table.Table(box = None, show_header = False, show_lines = True, expand = True)
+            table = rich.table.Table(box = None, show_header = False, show_lines = True, expand = True, row_styles=['row_odd', 'row_even'])
             table.add_column('H')
             for k in keys:
                 table.add_column(k)
@@ -126,7 +130,7 @@ class stack:
             for task in tasks:
                 taskers = self.tasker(task)
                 if str(task['id']) in self.tasker.touched:
-                    row = ['>']
+                    row = [rich.text.Text('▶', style = 'touched')]
                 else:
                     row = ['']
 
@@ -134,14 +138,15 @@ class stack:
                     if k in task:
                         val = taskers[k]
                         if type(val) == str:
-                            row.append( val )
+                            row.append( rich.text.Text(val, style=k) )
                         elif type(val) == list:
-                            row.append( " ".join(val) )
+                            # FIXME use Columns if does not expand.
+                            row.append( rich.text.Text(" ".join(val), style=k) )
                         else:
-                            row.append( str(val) )
+                            row.append( rich.text.Text(str(val), style=k) )
                     else:
                         row.append("")
-                table.add_row(*[str(i) for i in row])
+                table.add_row(*[t for t in row])
             return table
 
 
@@ -289,6 +294,43 @@ def parse_touched(out):
     return re.findall('[ModifyingCreated]+ task ([0-9]+)', out)
 
 
+def get_themes(name = None):
+    themes = {
+        "none": {
+            'touched': '',
+            'id': '',
+            'description': '',
+            'entry': '',
+            'modified': '',
+            'started': '',
+            'status': '',
+            'uuid': '',
+            'tags': '',
+            'urgency': '',
+            'row_odd': '',
+            'row_even' : '',
+        },
+        "nojhan": {
+            'touched': '#4E9A06',
+            'id': 'bold color(214)',
+            'description': 'white',
+            'entry': '',
+            'modified': 'color(240)',
+            'started': '',
+            'status': 'bold italic white',
+            'uuid': '',
+            'tags': 'color(27)',
+            'urgency': 'color(219)',
+            'row_odd': 'on #262121',
+            'row_even' : 'on #2d2929',
+        },
+    }
+    if name:
+        return themes[name]
+    else:
+        return themes
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
@@ -306,6 +348,8 @@ if __name__ == "__main__":
             help="Separator used for lists that are passed as options arguments.")
 
     layouts = parser.add_argument_group('layout options')
+    layouts.add_argument('-t', '--theme', metavar='NAME', type=str, default='none',
+            choices = get_themes().keys(), help="Color theme.")
     layouts.add_argument('--card-flat-wrap', metavar="NB", type=int, default=25,
             help="Number of character at which to wrap the description of Flat Cards.")
 
@@ -331,6 +375,8 @@ if __name__ == "__main__":
     else:
         show_only = showed
 
+    theme = rich.theme.Theme(get_themes(asked.theme))
+
     # tasker = task.Card(show_only, touched = touched, wrap_width = asked.card_flat_wrap)
     tasker = task.Raw(show_only, touched = touched)
 
@@ -343,7 +389,7 @@ if __name__ == "__main__":
     # sectioner = sections.Vertical(stacker, sort_on_values, group_by_status)
     sectioner = sections.Horizontal(stacker, sort_on_values, group_by_status)
 
-    console = Console()
-    console.rule("taskwarrior-fancy")
+    console = Console(theme = theme)
+    # console.rule("taskwarrior-deluxe")
     console.print(sectioner(jdata))
 

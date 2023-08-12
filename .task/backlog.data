@@ -10,3 +10,9 @@
 {"description":"semantic allow tags starting with a hash to refer to a github issue or PR","entry":"20230811T170722Z","modified":"20230811T171645Z","status":"pending","uuid":"06cf70a9-4f0e-4b32-b7bb-d1799803665c","tags":["feat"]}
 {"description":"semantic tags : allow tags starting with a hash to refer to a github issue or PR","entry":"20230811T170722Z","modified":"20230811T171703Z","status":"pending","uuid":"06cf70a9-4f0e-4b32-b7bb-d1799803665c","tags":["feat"]}
 {"description":"styling: apply configurable styles to each field and state with semantics","entry":"20230811T171937Z","modified":"20230811T171937Z","status":"pending","uuid":"17819637-4f4a-4e46-8622-12d8243c54da","tags":["feat"]}
+{"description":"styling: apply configurable styles to each field and state with semantics","entry":"20230811T171937Z","modified":"20230811T202525Z","start":"20230811T202525Z","status":"pending","uuid":"17819637-4f4a-4e46-8622-12d8243c54da","tags":["feat"]}
+{"description":"more themes","entry":"20230812T182344Z","modified":"20230812T182344Z","status":"pending","uuid":"9ee183d4-3413-4efa-ba68-10d709669c05","tags":["feat"]}
+{"description":"more themes","entry":"20230812T182344Z","modified":"20230812T182451Z","status":"pending","uuid":"9ee183d4-3413-4efa-ba68-10d709669c05","tags":["bug","feat"]}
+{"description":"more themes","entry":"20230812T182344Z","modified":"20230812T182523Z","status":"pending","uuid":"9ee183d4-3413-4efa-ba68-10d709669c05","tags":["feat"]}
+{"description":"more themes","entry":"20230812T182344Z","modified":"20230812T182634Z","status":"pending","uuid":"9ee183d4-3413-4efa-ba68-10d709669c05","tags":["bug"]}
+{"description":"more themes","entry":"20230812T182344Z","modified":"20230812T182638Z","status":"pending","uuid":"9ee183d4-3413-4efa-ba68-10d709669c05","tags":["feat"]}
