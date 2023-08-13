@@ -58,15 +58,12 @@ class task:
             sid = str(task["id"])
             if ':' in task["description"]:
                 short, desc = task["description"].split(":")
-                title = rich.text.Text(sid, style='id') + ":" + rich.text.Text(short.strip(), style='title')
+                title = rich.text.Text(sid, style='id') + ":" + rich.text.Text(short.strip(), style='short_description')
+                desc = rich.text.Text("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)), style='long_description')
             else:
                 desc  = task["description"]
+                desc = rich.text.Text("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)), style='description')
                 title = rich.text.Text(sid, style='id')
-
-            desc = rich.text.Text("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)), style='description')
-
-            # if sid in touched:
-            #     title = rich.text.Text(title, style='touched')
 
             segments = []
             for key in self.show_only:
@@ -78,7 +75,7 @@ class task:
                     elif type(val) == list:
                         # FIXME Columns does not fit.
                         # g = Columns([f"+{t}" for t in val], expand = False)
-                        g = rich.console.Group(*[rich.text.Text(f"🔖 {t}", style=key) for t in val], fit = True)
+                        g = rich.console.Group(*[rich.text.Text(f"🏷  {t}", style=key) for t in val], fit = True)
                         segments.append(g)
                     else:
                         segments.append(rich.text.Text(segment+str(val), style=key))
@@ -140,7 +137,15 @@ class stack:
                         if type(val) == str:
                             if k == 'description' and ':' in val:
                                 short, desc = val.split(':')
-                                row.append( rich.text.Text(short, style='title') +':'+ rich.text.Text(desc, style=k) )
+                                # FIXME groups add a newline or hide what follows, no option to avoid it.
+                                # row.append( rich.console.Group(
+                                #     rich.text.Text(short+':', style='short_description', end='\n'),
+                                #     rich.text.Text(desc, style='description', end='\n')
+                                # ))
+                                # FIXME style leaks on all texts:
+                                row.append( rich.text.Text(short, style='short_description', end='') + \
+                                            rich.text.Text(':', style='default', end='') + \
+                                            rich.text.Text(desc, style='long_description', end='') )
                             else:
                                 row.append( rich.text.Text(val, style=k) )
                         elif type(val) == list:
@@ -205,7 +210,7 @@ class sections:
 
             row = []
             for k in keys:
-                row.append( rich.panel.Panel(self.stacker(groups[k]), title = rich.text.Text(k.upper(), style=k), title_align = "left", expand = True))
+                row.append( rich.panel.Panel(self.stacker(groups[k]), title = rich.text.Text(k.upper(), style=k), title_align = "left", expand = True, border_style="title"))
 
             table.add_row(*row)
             return table
@@ -305,6 +310,8 @@ def get_themes(name = None):
             'id': '',
             'title': '',
             'description': '',
+            'short_description': '',
+            'long_description': '',
             'entry': '',
             'modified': '',
             'started': '',
@@ -317,9 +324,11 @@ def get_themes(name = None):
         },
         "nojhan": {
             'touched': '#4E9A06',
-            'id': 'bold color(214)',
-            'title': 'bold white',
-            'description': 'default',
+            'id': 'color(214)',
+            'title': '',
+            'description': 'color(231)',
+            'short_description': 'color(231)',
+            'long_description': 'default',
             'entry': '',
             'modified': 'color(240)',
             'started': '',
