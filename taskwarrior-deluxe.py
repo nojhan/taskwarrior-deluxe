@@ -336,8 +336,8 @@ def parse_touched(out):
     return re.findall('[ModifyingCreated]+ task ([0-9]+)', out)
 
 
-def get_themes(name = None):
-    themes = {
+def get_swatches(name = None):
+    swatches = {
 
         "none": {
             'touched': '',
@@ -375,7 +375,7 @@ def get_themes(name = None):
             'row_even' : 'on #2d2929',
         },
 
-        "filled": {
+        "chalky": {
             'touched': 'color(0) on color(15)',
             'id': 'bold color(160) on white',
             'title': '',
@@ -395,9 +395,9 @@ def get_themes(name = None):
 
     }
     if name:
-        return themes[name]
+        return swatches[name]
     else:
-        return themes
+        return swatches
 
 
 def get_layouts(kind = None, name = None):
@@ -457,8 +457,8 @@ if __name__ == "__main__":
     layouts_grp.add_argument('-c', '--layout-sections', metavar='NAME', type=str, default='Horizontal',
             choices = get_layouts('sections').keys(), help="Layout managing sections.")
 
-    layouts_grp.add_argument('-T', '--theme', metavar='NAME', type=str, default='none',
-            choices = get_themes().keys(), help="Color theme.")
+    layouts_grp.add_argument('-T', '--swatch', metavar='NAME', type=str, default='none',
+            choices = get_swatches().keys(), help="Color chart.")
 
     layouts_grp.add_argument('--card-wrap', metavar="NB", type=int, default=25,
             help="Number of character at which to wrap the description of Cards tasks.")
@@ -485,7 +485,7 @@ if __name__ == "__main__":
     else:
         show_only = showed
 
-    theme = rich.theme.Theme(get_themes(asked.theme))
+    swatch = rich.theme.Theme(get_swatches(asked.swatch))
     layouts = get_layouts()
 
     if asked.layout_task == "Card" or asked.layout_task == "Sheet":
@@ -499,7 +499,7 @@ if __name__ == "__main__":
     sort_on_values = sort.OnValues(["pending","started","completed"])
     sectioner = layouts['sections'][asked.layout_sections](stacker, sort_on_values, group_by_status)
 
-    console = Console(theme = theme)
+    console = Console(theme = swatch)
     # console.rule("taskwarrior-deluxe")
     console.print(sectioner(jdata))
 
