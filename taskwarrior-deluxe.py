@@ -50,7 +50,7 @@ class task:
             super().__init__(show_only, order, group = None, touched = touched)
             self.wrap_width = wrap_width
 
-        def __call__(self, task):
+        def _make(self, task):
             if not self.show_only:
                 # Show all existing fields.
                 self.show_only = task.keys()
@@ -58,10 +58,14 @@ class task:
             sid = str(task["id"])
             if ':' in task["description"]:
                 short, desc = task["description"].split(":")
-                title = rich.text.Text(sid, style='id') + ":" + rich.text.Text(short.strip(), style='short_description')
+                title = rich.text.Text(sid, style='id') + rich.text.Text(":", style="default") + rich.text.Text(short.strip(), style='short_description')
                 desc = rich.text.Text("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)), style='long_description')
+            elif len(task["description"]) <= self.wrap_width - 8:
+                d = task["description"].strip()
+                title = rich.text.Text(sid, style='id') + rich.text.Text(":", style="default") + rich.text.Text(d, style='short_description')
+                desc = None
             else:
-                desc  = task["description"]
+                desc = task["description"]
                 desc = rich.text.Text("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)), style='description')
                 title = rich.text.Text(sid, style='id')
 
@@ -83,15 +87,44 @@ class task:
             # FIXME Columns does not fit.
             # cols = Columns(segments)
             cols = rich.console.Group(*segments, fit = True)
-            grp = rich.console.Group(desc, cols, fit = True)
-            if sid in touched:
-                panel = rich.panel.Panel(grp, title = title,
+            if desc:
+                body = rich.console.Group(desc, cols, fit = True)
+            else:
+                body = cols
+
+            return title,body
+
+        def __call__(self, task):
+            title, body = self._make(task)
+
+            sid = str(task["id"])
+            if sid in self.touched:
+                panel = rich.panel.Panel(body, title = title,
                     title_align="left", expand = False, padding = (0,1), border_style = 'touched', box = rich.box.DOUBLE_EDGE)
             else:
-                panel = rich.panel.Panel(grp, title = title,
+                panel = rich.panel.Panel(body, title = title,
                     title_align="left", expand = False, padding = (0,1))
 
             return panel
+
+    class Sheet(Card):
+        def __init__(self, show_only, order = None, touched = [], wrap_width = 25):
+            super().__init__(show_only, order, touched = touched, wrap_width = wrap_width)
+
+        def __call__(self, task):
+            title, body = self._make(task)
+
+            t = rich.text.Text("\n ", style="") + title + rich.text.Text(" ")
+
+            sid = str(task["id"])
+            if sid in self.touched:
+                b = rich.panel.Panel(body, box = rich.box.SIMPLE_HEAD, style='touched')
+            else:
+                b = rich.panel.Panel(body, box = rich.box.SIMPLE_HEAD, style='description')
+
+            sheet = rich.console.Group(t,b)
+            return sheet
+
 
     class Raw(Tasker):
         def __init__(self, show_only, order = None, touched = []):
@@ -305,6 +338,7 @@ def parse_touched(out):
 
 def get_themes(name = None):
     themes = {
+
         "none": {
             'touched': '',
             'id': '',
@@ -322,6 +356,7 @@ def get_themes(name = None):
             'row_odd': '',
             'row_even' : '',
         },
+
         "nojhan": {
             'touched': '#4E9A06',
             'id': 'color(214)',
@@ -339,6 +374,25 @@ def get_themes(name = None):
             'row_odd': 'on #262121',
             'row_even' : 'on #2d2929',
         },
+
+        "filled": {
+            'touched': 'color(0) on color(15)',
+            'id': 'bold color(160) on white',
+            'title': '',
+            'description': 'black on white',
+            'short_description': 'bold black on white',
+            'long_description': 'black on white',
+            'entry': '',
+            'modified': 'color(240)',
+            'started': '',
+            'status': 'bold italic white',
+            'uuid': '',
+            'tags': 'color(21) on white',
+            'urgency': 'color(219)',
+            'row_odd': 'on #262121',
+            'row_even' : 'on #2d2929',
+        },
+
     }
     if name:
         return themes[name]
@@ -347,10 +401,12 @@ def get_themes(name = None):
 
 
 def get_layouts(kind = None, name = None):
+    # FIXME use introspection to extract that automatically.
     available = {
         "task": {
             "Raw": task.Raw,
             "Card": task.Card,
+            "Sheet": task.Sheet,
         },
         "stack": {
             "RawTable": stack.RawTable,
@@ -432,7 +488,7 @@ if __name__ == "__main__":
     theme = rich.theme.Theme(get_themes(asked.theme))
     layouts = get_layouts()
 
-    if asked.layout_task == "Card":
+    if asked.layout_task == "Card" or asked.layout_task == "Sheet":
         tasker = layouts['task'][asked.layout_task](show_only, touched = touched, wrap_width = asked.card_wrap)
     else:
         tasker = layouts['task'][asked.layout_task](show_only, touched = touched)

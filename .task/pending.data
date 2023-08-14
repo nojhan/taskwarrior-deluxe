@@ -4,5 +4,5 @@
 [description:"sort by urgency" entry:"1691773782" modified:"1691773782" status:"pending" tags:"feat" tags_feat:"x" uuid:"4f041f52-739a-4aca-94e6-164f43e61866"]
 [description:"config file.s" entry:"1691773951" modified:"1691773951" status:"pending" tags:"feat" tags_feat:"x" uuid:"4d822c4a-d51e-4992-8a22-6e0167ac197a"]
 [description:"fix escaped add: when passing add with escapable characters, bug ensues." entry:"1691774077" modified:"1691774077" status:"pending" tags:"bug" tags_bug:"x" uuid:"79e1ba11-15ae-489f-9868-ab6adea40a91"]
-[description:"styling: apply configurable styles to each field and state with semantics" entry:"1691774377" modified:"1691785525" start:"1691785525" status:"pending" tags:"feat" tags_feat:"x" uuid:"17819637-4f4a-4e46-8622-12d8243c54da"]
-[description:"more themes" entry:"1691864624" modified:"1691867548" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+[description:"more themes" entry:"1691864624" modified:"1691990020" start:"1691990020" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+[description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990415" status:"pending" tags:"feat" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]

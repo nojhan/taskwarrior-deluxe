@@ -82,3 +82,34 @@ time 1691867548
 old [description:"more themes" entry:"1691864624" modified:"1691867538" status:"pending" tags:"feat" tags_feat:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
 new [description:"more themes" entry:"1691864624" modified:"1691867548" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
 ---
+time 1691990004
+old [description:"styling: apply configurable styles to each field and state with semantics" entry:"1691774377" modified:"1691785525" start:"1691785525" status:"pending" tags:"feat" tags_feat:"x" uuid:"17819637-4f4a-4e46-8622-12d8243c54da"]
+new [description:"styling: apply configurable styles to each field and state with semantics" end:"1691990004" entry:"1691774377" modified:"1691990004" status:"completed" tags:"feat" tags_feat:"x" uuid:"17819637-4f4a-4e46-8622-12d8243c54da"]
+---
+time 1691990020
+old [description:"more themes" entry:"1691864624" modified:"1691867548" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+new [description:"more themes" entry:"1691864624" modified:"1691990020" start:"1691990020" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+---
+time 1691990078
+new [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990078" status:"pending" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+---
+time 1691990127
+old [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990078" status:"pending" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+new [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990127" status:"pending" tags:"feat" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+---
+time 1691990267
+old [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990127" status:"pending" tags:"feat" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+new [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990267" status:"pending" tags:"bug,feat" tags_bug:"x" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+---
+time 1691990376
+old [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990267" status:"pending" tags:"bug,feat" tags_bug:"x" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+new [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990376" status:"pending" tags:"feat" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+---
+time 1691990402
+old [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990376" status:"pending" tags:"feat" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+new [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990402" status:"pending" tags:"bug,feat" tags_bug:"x" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+---
+time 1691990415
+old [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990402" status:"pending" tags:"bug,feat" tags_bug:"x" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+new [description:"show done: display completed tasks during some days after their completion, but not after" entry:"1691990078" modified:"1691990415" status:"pending" tags:"feat" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
+---
