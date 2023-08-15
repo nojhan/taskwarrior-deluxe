@@ -46,9 +46,10 @@ class Sectioner(Widget):
 
 class task:
     class Card(Tasker):
-        def __init__(self, show_only, order = None, touched = [], wrap_width = 25):
+        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icon = "+"):
             super().__init__(show_only, order, group = None, touched = touched)
             self.wrap_width = wrap_width
+            self.tag_icon = tag_icon
 
         def _make(self, task):
             if not self.show_only:
@@ -79,7 +80,7 @@ class task:
                     elif type(val) == list:
                         # FIXME Columns does not fit.
                         # g = Columns([f"+{t}" for t in val], expand = False)
-                        g = rich.console.Group(*[rich.text.Text(f"🏷  {t}", style=key) for t in val], fit = True)
+                        g = rich.console.Group(*[rich.text.Text(f"{self.tag_icon}{t}", style=key) for t in val], fit = True)
                         segments.append(g)
                     else:
                         segments.append(rich.text.Text(segment+str(val), style=key))
@@ -108,8 +109,8 @@ class task:
             return panel
 
     class Sheet(Card):
-        def __init__(self, show_only, order = None, touched = [], wrap_width = 25):
-            super().__init__(show_only, order, touched = touched, wrap_width = wrap_width)
+        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icon = "🏷  "):
+            super().__init__(show_only, order, touched = touched, wrap_width = wrap_width, tag_icon = tag_icon)
 
         def __call__(self, task):
             title, body = self._make(task)
@@ -387,7 +388,7 @@ def get_swatches(name = None):
             'started': '',
             'status': 'bold italic white',
             'uuid': '',
-            'tags': 'color(21) on white',
+            'tags': 'color(166) on white',
             'urgency': 'color(219)',
             'row_odd': 'on #262121',
             'row_even' : 'on #2d2929',
