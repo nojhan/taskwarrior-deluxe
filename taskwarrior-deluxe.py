@@ -46,10 +46,10 @@ class Sectioner(Widget):
 
 class task:
     class Card(Tasker):
-        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icon = "+"):
+        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icons = "+"):
             super().__init__(show_only, order, group = None, touched = touched)
             self.wrap_width = wrap_width
-            self.tag_icon = tag_icon
+            self.tag_icons = tag_icons
 
         def _make(self, task):
             if not self.show_only:
@@ -80,7 +80,15 @@ class task:
                     elif type(val) == list:
                         # FIXME Columns does not fit.
                         # g = Columns([f"+{t}" for t in val], expand = False)
-                        g = rich.console.Group(*[rich.text.Text(f"{self.tag_icon}{t}", style=key) for t in val], fit = True)
+                        lst = []
+                        for t in val:
+                           lst.append( \
+                               rich.text.Text(self.tag_icons[0], style="tags_ends") + \
+                               rich.text.Text(t, style=key) + \
+                               rich.text.Text(self.tag_icons[1], style="tags_ends") \
+                           )
+                        g = rich.console.Group(*lst, fit = True)
+                        # g = rich.console.Group(*[rich.text.Text(f"{self.tag_icons[0]}{t}{self.tag_icons[1]}", style=key) for t in val], fit = True)
                         segments.append(g)
                     else:
                         segments.append(rich.text.Text(segment+str(val), style=key))
@@ -109,13 +117,16 @@ class task:
             return panel
 
     class Sheet(Card):
-        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icon = "🏷  "):
-            super().__init__(show_only, order, touched = touched, wrap_width = wrap_width, tag_icon = tag_icon)
+        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icons = "🏷  ", title_ends=["\n "," "]):
+            super().__init__(show_only, order, touched = touched, wrap_width = wrap_width, tag_icons = tag_icons)
+            self.title_ends = title_ends
 
         def __call__(self, task):
             title, body = self._make(task)
 
-            t = rich.text.Text("\n ", style="") + title + rich.text.Text(" ")
+            t = rich.text.Text(self.title_ends[0], style="short_description_ends") + \
+                title + \
+                rich.text.Text(self.title_ends[1], style="short_description_ends")
 
             sid = str(task["id"])
             if sid in self.touched:
@@ -346,12 +357,14 @@ def get_swatches(name = None):
             'title': '',
             'description': '',
             'short_description': '',
+            'short_description_ends': '',
             'long_description': '',
             'entry': '',
             'modified': '',
             'started': '',
             'status': '',
             'uuid': '',
+            'tags': '',
             'tags': '',
             'urgency': '',
             'row_odd': '',
@@ -364,12 +377,14 @@ def get_swatches(name = None):
             'title': '',
             'description': 'color(231)',
             'short_description': 'color(231)',
+            'short_description_ends': '',
             'long_description': 'default',
             'entry': '',
             'modified': 'color(240)',
             'started': '',
             'status': 'bold italic white',
             'uuid': '',
+            'tags': 'color(33)',
             'tags': 'color(33)',
             'urgency': 'color(219)',
             'row_odd': 'on #262121',
@@ -382,6 +397,7 @@ def get_swatches(name = None):
             'title': '',
             'description': 'black on white',
             'short_description': 'bold black on white',
+            'short_description_ends': 'white',
             'long_description': 'black on white',
             'entry': '',
             'modified': 'color(240)',
@@ -389,9 +405,30 @@ def get_swatches(name = None):
             'status': 'bold italic white',
             'uuid': '',
             'tags': 'color(166) on white',
+            'tags_ends': 'white',
             'urgency': 'color(219)',
-            'row_odd': 'on #262121',
-            'row_even' : 'on #2d2929',
+            'row_odd': '',
+            'row_even' : '',
+        },
+
+        "carbon": {
+            'touched': 'color(15) on color(0)',
+            'id': 'bold color(196) on color(236)',
+            'title': '',
+            'description': 'white on color(236)',
+            'short_description': 'bold white on color(236)',
+            'short_description_ends': 'color(236)',
+            'long_description': 'white on color(236)',
+            'entry': '',
+            'modified': '',
+            'started': '',
+            'status': 'bold italic white',
+            'uuid': '',
+            'tags': 'bold black on color(88)',
+            'tags_ends': 'color(88)',
+            'urgency': 'color(219)',
+            'row_odd': '',
+            'row_even' : '',
         },
 
     }
@@ -400,6 +437,36 @@ def get_swatches(name = None):
     else:
         return swatches
 
+
+def get_icons(name=None):
+
+    icons = {
+
+        'none' : {
+            'tag': ['', ''],
+            'short': ['', ''],
+        },
+
+        'ascii' : {
+            'tag': ['+', ''],
+            'short': ['', ''],
+        },
+
+        'emojis' : {
+            'tag': ['🏷  ', ''],
+            'short': ['\n ', ' '],
+        },
+
+        'power' : {
+            'tag': ['', ''],
+            'short': ['\n ', ' '],
+        },
+
+    }
+    if name:
+        return icons[name]
+    else:
+        return icons
 
 def get_layouts(kind = None, name = None):
     # FIXME use introspection to extract that automatically.
@@ -461,6 +528,9 @@ if __name__ == "__main__":
     layouts_grp.add_argument('-T', '--swatch', metavar='NAME', type=str, default='none',
             choices = get_swatches().keys(), help="Color chart.")
 
+    layouts_grp.add_argument('-I', '--icons', metavar='NAME', type=str, default='none',
+            choices = get_icons().keys(), help="Additional decorative characters.")
+
     layouts_grp.add_argument('--card-wrap', metavar="NB", type=int, default=25,
             help="Number of character at which to wrap the description of Cards tasks.")
 
@@ -489,8 +559,11 @@ if __name__ == "__main__":
     swatch = rich.theme.Theme(get_swatches(asked.swatch))
     layouts = get_layouts()
 
-    if asked.layout_task == "Card" or asked.layout_task == "Sheet":
-        tasker = layouts['task'][asked.layout_task](show_only, touched = touched, wrap_width = asked.card_wrap)
+    if asked.layout_task == "Card":
+        tasker = layouts['task']['Card'](show_only, touched = touched, wrap_width = asked.card_wrap, tag_icons = get_icons(asked.icons)['tag'])
+    elif asked.layout_task == "Sheet":
+        icons = get_icons(asked.icons)
+        tasker = layouts['task']['Sheet'](show_only, touched = touched, wrap_width = asked.card_wrap, tag_icons = icons['tag'], title_ends = icons['short'])
     else:
         tasker = layouts['task'][asked.layout_task](show_only, touched = touched)
 
