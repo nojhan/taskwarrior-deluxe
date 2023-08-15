@@ -76,7 +76,7 @@ class task:
                     val = task[key]
                     segment = f"{key}: "
                     if type(val) == str:
-                        segments.append(rich.text.Text(segment+t, style=key))
+                        segments.append(rich.text.Text(segment+val, style=key))
                     elif type(val) == list:
                         # FIXME Columns does not fit.
                         # g = Columns([f"+{t}" for t in val], expand = False)
@@ -289,9 +289,17 @@ class Grouper:
                     groups[ task[self.field] ].append(task)
                 else:
                     groups[ task[self.field] ] = [task]
+            else:
+                if "" in groups:
+                    groups[ "" ].append( task )
+                else:
+                    groups[ "" ] = [task]
         return groups
 
 class group:
+    class Field(Grouper):
+        pass
+
     class Status(Grouper):
         def __init__(self):
             super().__init__("status")
@@ -311,6 +319,7 @@ class group:
                         groups[ task[self.field] ] = [task]
 
             return groups
+
 
 def call_taskwarrior(args:list[str] = ['export']) -> str:
     # Local file.
@@ -503,7 +512,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("-s", "--show", metavar="columns", type=str, default="id,description,tags", nargs=1,
+    parser.add_argument("-s", "--show", metavar="columns", type=str, default="id,priority,description,tags", nargs=1,
             help="Ordered list of columns to show.")
 
 
@@ -524,6 +533,8 @@ if __name__ == "__main__":
             choices = get_layouts('stack').keys(), help="Layout managing stacks.")
     layouts_grp.add_argument('-c', '--layout-sections', metavar='NAME', type=str, default='Horizontal',
             choices = get_layouts('sections').keys(), help="Layout managing sections.")
+    layouts_grp.add_argument('-C', '--layout-subsections', metavar='NAME', type=str, default=None,
+            choices = get_layouts('sections').keys(), help="Layout managing sub-sections.")
 
     layouts_grp.add_argument('-T', '--swatch', metavar='NAME', type=str, default='none',
             choices = get_swatches().keys(), help="Color chart.")
@@ -570,8 +581,15 @@ if __name__ == "__main__":
     stacker = layouts['stack'][asked.layout_stack](tasker)
 
     group_by_status = group.Status()
-    sort_on_values = sort.OnValues(["pending","started","completed"])
-    sectioner = layouts['sections'][asked.layout_sections](stacker, sort_on_values, group_by_status)
+    group_by_priority = group.Field("priority")
+    sort_on_status_values = sort.OnValues(["pending","started","completed"])
+    sort_on_priority_values = sort.OnValues(["H","M","L",""])
+
+    if asked.layout_subsections:
+        subsectioner = layouts['sections'][asked.layout_subsections](stacker, sort_on_priority_values, group_by_priority)
+        sectioner = layouts['sections'][asked.layout_sections](subsectioner, sort_on_status_values, group_by_status)
+    else:
+        sectioner = layouts['sections'][asked.layout_sections](stacker, sort_on_status_values, group_by_status)
 
     console = Console(theme = swatch)
     # console.rule("taskwarrior-deluxe")
