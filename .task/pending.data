@@ -8,4 +8,4 @@
 [description:"init command: add a command to initialize a local .task dir and\/or config file.s" entry:"1692121630" modified:"1692121630" priority:"M" status:"pending" tags:"feat" tags_feat:"x" uuid:"81fc6480-e8e7-4dd4-9f01-a00f34463135"]
 [description:"colored panels: allow selecting a different swatch for each &open;sub&close;panel" entry:"1692122434" modified:"1692122452" priority:"M" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"ca17838d-958f-498b-bff5-a24576820ae7"]
 [description:"handle prompts: for some commands like delete, taskwarrior setup an interactive prompt, which needs to be handled." entry:"1692122614" modified:"1692122614" status:"pending" tags:"bug" tags_bug:"x" uuid:"e2480c4b-4c73-4d03-8568-82f14ade7b38"]
-[description:"subgrouping: allow to add another sectionning, e.g. based on priority." entry:"1692122668" modified:"1692122680" start:"1692122680" status:"pending" tags:"feat" tags_feat:"x" uuid:"9dc6d43a-b316-4417-ad2a-e47b8a5ddc7a"]
+[description:"sorting: allow sorting within a stacker." entry:"1692187030" modified:"1692187030" status:"pending" tags:"feat" tags_feat:"x" uuid:"30ec6b32-a32e-4595-a24d-02ac9002fd72"]

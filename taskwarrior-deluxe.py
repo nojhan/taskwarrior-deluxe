@@ -15,8 +15,20 @@ from rich.columns import Columns
 
 class Widget:
     def __init__(self, order, group = None):
-        self.order = order
-        self.group = group
+        self.sorter = order
+        self.grouper = group
+
+    def order(self, groups):
+        if self.sorter:
+            return self.sorter()
+        else:
+            return groups.keys()
+
+    def group(self, tasks):
+        if self.grouper:
+            return self.grouper(tasks)
+        else:
+            return {"":tasks}
 
 class Tasker(Widget):
     def __init__(self, show_only, order, group = None, touched = []):
@@ -234,9 +246,9 @@ class sections:
         def __call__(self, tasks):
             sections = []
             groups = self.group(tasks)
-            for key in self.order():
+            for key in self.order(groups):
                 if key in groups:
-                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = rich.text.Text(key.upper(), style=key), title_align = "left", expand = False))
+                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = rich.text.Text(str(key).upper(), style=key), title_align = "left", expand = False))
             return rich.console.Group(*sections)
 
     class Horizontal(Sectioner):
@@ -248,7 +260,7 @@ class sections:
             groups = self.group(tasks)
             table = rich.table.Table(box = None, show_header = False, show_lines = False)
             keys = []
-            for key in self.order():
+            for key in self.order(groups):
                 if key in groups:
                     table.add_column(key)
                     keys.append(key)
@@ -265,9 +277,8 @@ class SectionSorter:
         raise NotImplementedError
 
 class sort:
-    class Tasks:
-        def make(self, tasks, field, reverse = False):
-            return sorted(tasks, key = lambda t: t[field], reverse = reverse)
+    # def make(self, tasks, field, reverse = False):
+    #     return sorted(tasks, key = lambda t: t[field], reverse = reverse)
 
     class OnValues(SectionSorter):
         def __init__(self, values):
@@ -398,6 +409,7 @@ def get_swatches(name = None):
             'urgency': 'color(219)',
             'row_odd': 'on #262121',
             'row_even' : 'on #2d2929',
+            'priority': 'color(105)',
         },
 
         "chalky": {
@@ -536,6 +548,12 @@ if __name__ == "__main__":
     layouts_grp.add_argument('-C', '--layout-subsections', metavar='NAME', type=str, default=None,
             choices = get_layouts('sections').keys(), help="Layout managing sub-sections.")
 
+    layouts_grp.add_argument('-g', '--group-by', metavar="NAME", type=str, default="status",
+            help="Create sections by grouping on this field.")
+
+    layouts_grp.add_argument('-G', '--subgroup-by', metavar="NAME", type=str, default=None,
+            help="Create sub-sections by grouping on this field.")
+
     layouts_grp.add_argument('-T', '--swatch', metavar='NAME', type=str, default='none',
             choices = get_swatches().keys(), help="Color chart.")
 
@@ -549,6 +567,7 @@ if __name__ == "__main__":
     parser.add_argument('cmd', nargs="*")
 
     asked = parser.parse_args()
+    # print(asked)
 
     # First pass arguments to taskwarrior and let it do its magic.
     out = call_taskwarrior(asked.cmd)
@@ -580,16 +599,39 @@ if __name__ == "__main__":
 
     stacker = layouts['stack'][asked.layout_stack](tasker)
 
-    group_by_status = group.Status()
-    group_by_priority = group.Field("priority")
-    sort_on_status_values = sort.OnValues(["pending","started","completed"])
-    sort_on_priority_values = sort.OnValues(["H","M","L",""])
-
-    if asked.layout_subsections:
-        subsectioner = layouts['sections'][asked.layout_subsections](stacker, sort_on_priority_values, group_by_priority)
-        sectioner = layouts['sections'][asked.layout_sections](subsectioner, sort_on_status_values, group_by_status)
+    if asked.group_by:
+        if asked.group_by.lower() == "status":
+            group_by = group.Status()
+            sort_on = sort.OnValues(["pending","started","completed"])
+        elif asked.group_by.lower() == "priority":
+            group_by = group.Field("priority")
+            sort_on = sort.OnValues(["H","M","L",""])
+        else:
+            group_by = group.Field(asked.group_by)
+            sort_on = None
     else:
-        sectioner = layouts['sections'][asked.layout_sections](stacker, sort_on_status_values, group_by_status)
+        group_by = group.Status()
+        sort_on = sort.OnValues(["pending","started","completed"])
+
+    if asked.subgroup_by:
+        if asked.subgroup_by.lower() == "status":
+            subgroup_by = group.Status()
+            subsort_on = sort.OnValues(["pending","started","completed"])
+        if asked.subgroup_by.lower() == "priority":
+            subgroup_by = group.Field("priority")
+            subsort_on = sort.OnValues(["H","M","L",""])
+        else:
+            subgroup_by = group.Field(asked.subgroup_by)
+            subsort_on = None
+    else:
+        subgroup_by = None
+        subsort_on = None
+
+    if asked.layout_subsections and asked.subgroup_by:
+        subsectioner = layouts['sections'][asked.layout_subsections](stacker, subsort_on, subgroup_by)
+        sectioner = layouts['sections'][asked.layout_sections](subsectioner, sort_on, group_by)
+    else:
+        sectioner = layouts['sections'][asked.layout_sections](stacker, sort_on, group_by)
 
     console = Console(theme = swatch)
     # console.rule("taskwarrior-deluxe")

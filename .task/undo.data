@@ -153,3 +153,10 @@ time 1692122680
 old [description:"subgrouping: allow to add another sectionning, e.g. based on priority." entry:"1692122668" modified:"1692122668" status:"pending" tags:"feat" tags_feat:"x" uuid:"9dc6d43a-b316-4417-ad2a-e47b8a5ddc7a"]
 new [description:"subgrouping: allow to add another sectionning, e.g. based on priority." entry:"1692122668" modified:"1692122680" start:"1692122680" status:"pending" tags:"feat" tags_feat:"x" uuid:"9dc6d43a-b316-4417-ad2a-e47b8a5ddc7a"]
 ---
+time 1692187030
+new [description:"sorting: allow sorting within a stacker." entry:"1692187030" modified:"1692187030" status:"pending" tags:"feat" tags_feat:"x" uuid:"30ec6b32-a32e-4595-a24d-02ac9002fd72"]
+---
+time 1692187048
+old [description:"subgrouping: allow to add another sectionning, e.g. based on priority." entry:"1692122668" modified:"1692122680" start:"1692122680" status:"pending" tags:"feat" tags_feat:"x" uuid:"9dc6d43a-b316-4417-ad2a-e47b8a5ddc7a"]
+new [description:"subgrouping: allow to add another sectionning, e.g. based on priority." end:"1692187048" entry:"1692122668" modified:"1692187048" status:"completed" tags:"feat" tags_feat:"x" uuid:"9dc6d43a-b316-4417-ad2a-e47b8a5ddc7a"]
+---

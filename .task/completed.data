@@ -1,2 +1,3 @@
+[description:"subgrouping: allow to add another sectionning, e.g. based on priority." end:"1692187048" entry:"1692122668" modified:"1692187048" status:"completed" tags:"feat" tags_feat:"x" uuid:"9dc6d43a-b316-4417-ad2a-e47b8a5ddc7a"]
 [description:"show done: display completed tasks during some days after their completion, but not after" end:"1692122556" entry:"1691990078" modified:"1692122561" status:"deleted" tags:"feat" tags_feat:"x" uuid:"18b8f46c-3498-4e75-8945-b578beaf29bc"]
 [description:"styling: apply configurable styles to each field and state with semantics" end:"1691990004" entry:"1691774377" modified:"1691990004" status:"completed" tags:"feat" tags_feat:"x" uuid:"17819637-4f4a-4e46-8622-12d8243c54da"]
