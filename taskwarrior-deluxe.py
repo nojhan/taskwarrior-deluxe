@@ -14,7 +14,41 @@ from rich.console import Console
 from rich.columns import Columns
 
 class Widget:
-    def __init__(self, order, group = None):
+    pass
+
+class Tasker(Widget):
+    def __init__(self, show_only, order = None, group = None, touched = []):
+        self.show_only = show_only
+        self.touched = touched
+        self.sorter = order
+        self.grouper = group
+
+    def __call__(self, task):
+        raise NotImplementedError
+
+class Stacker(Widget):
+    def __init__(self, tasker, sorter = None):
+        self.tasker = tasker
+        if sorter:
+            self.sorter = sorter
+        else:
+            self.sorter = stack.sort.Noop()
+
+    def __call__(self, tasks):
+        raise NotImplementedError
+
+class StackSorter:
+    def __init__(self, field, reverse = False):
+        self.field = field
+        self.reverse = reverse
+
+    def __call__(self, tasks):
+       raise NotImplementedError 
+
+
+class Sectioner(Widget):
+    def __init__(self, stacker, order, group):
+        self.stacker = stacker
         self.sorter = order
         self.grouper = group
 
@@ -29,28 +63,6 @@ class Widget:
             return self.grouper(tasks)
         else:
             return {"":tasks}
-
-class Tasker(Widget):
-    def __init__(self, show_only, order, group = None, touched = []):
-        super().__init__(order, group)
-        self.show_only = show_only
-        self.touched = touched
-
-    def __call__(self, task):
-        raise NotImplementedError
-
-class Stacker(Widget):
-    def __init__(self, tasker, order, group):
-        super().__init__(order, group)
-        self.tasker = tasker
-
-    def __call__(self, tasks):
-        raise NotImplementedError
-
-class Sectioner(Widget):
-    def __init__(self, stacker, order, group):
-        super().__init__(order, group)
-        self.stacker = stacker
 
     def __call__(self, tasks):
         raise NotImplementedError
@@ -169,9 +181,42 @@ class task:
             return raw
 
 class stack:
+    class sort:
+        class Noop(StackSorter):
+            def __init__(self):
+                super().__init__(None)
+
+            def __call__(self, tasks):
+                return tasks
+
+        class Field(StackSorter):
+            def __init__(self, field, reverse = False):
+                super().__init__(field, reverse)
+
+            def __call__(self, tasks):
+                def field_or_not(task):
+                    if self.field in task:
+                        return task[self.field]
+                    else:
+                        return "XXX" # No field comes last.
+                return sorted(tasks, key = field_or_not, reverse = self.reverse)
+
+        class Priority(StackSorter):
+            def __init__(self, reverse = False):
+                super().__init__("priority", reverse)
+
+            def __call__(self, tasks):
+                def p_value(task):
+                    p_values = {'H': 0, 'M': 1, 'L': 2, '': 3}
+                    if self.field in task:
+                        return p_values[task[self.field]]
+                    else:
+                        return p_values['']
+                return sorted(tasks, key = p_value, reverse = self.reverse)
+
     class RawTable(Stacker):
-        def __init__(self, tasker):
-            super().__init__(tasker, order = None, group = None)
+        def __init__(self, tasker, sorter = None):
+            super().__init__(tasker, sorter = sorter)
 
         def __call__(self, tasks):
             keys = self.tasker.show_only
@@ -181,7 +226,7 @@ class stack:
             for k in keys:
                 table.add_column(k)
 
-            for task in tasks:
+            for task in self.sorter(tasks):
                 taskers = self.tasker(task)
                 if str(task['id']) in self.tasker.touched:
                     row = [rich.text.Text('▶', style = 'touched')]
@@ -217,23 +262,23 @@ class stack:
 
 
     class Vertical(Stacker):
-        def __init__(self, tasker):
-            super().__init__(tasker, order = None, group = None)
+        def __init__(self, tasker, sorter = None):
+            super().__init__(tasker, sorter = sorter)
 
         def __call__(self, tasks):
             stack = rich.table.Table(box = None, show_header = False, show_lines = False, expand = True)
             stack.add_column("Tasks")
-            for task in tasks:
+            for task in self.sorter(tasks):
                stack.add_row( self.tasker(task) )
             return stack
 
     class Flat(Stacker):
-        def __init__(self, tasker):
-            super().__init__(tasker, order = None, group = None)
+        def __init__(self, tasker, sorter = None):
+            super().__init__(tasker, sorter = sorter)
 
         def __call__(self, tasks):
             stack = []
-            for task in tasks:
+            for task in self.sorter(tasks):
                stack.append( self.tasker(task) )
             cols = rich.columns.Columns(stack)
             return cols
@@ -276,17 +321,6 @@ class SectionSorter:
     def __call__(self):
         raise NotImplementedError
 
-class sort:
-    # def make(self, tasks, field, reverse = False):
-    #     return sorted(tasks, key = lambda t: t[field], reverse = reverse)
-
-    class OnValues(SectionSorter):
-        def __init__(self, values):
-            self.values = values
-
-        def __call__(self):
-            return self.values
-
 class Grouper:
     """Group tasks by field values."""
     def __init__(self, field):
@@ -308,6 +342,14 @@ class Grouper:
         return groups
 
 class group:
+    class sort:
+        class OnValues(SectionSorter):
+            def __init__(self, values):
+                self.values = values
+
+            def __call__(self):
+                return self.values
+
     class Field(Grouper):
         pass
 
@@ -524,7 +566,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("-s", "--show", metavar="columns", type=str, default="id,priority,description,tags", nargs=1,
+    parser.add_argument("-s", "--show", metavar="columns", type=str, default="id,priority,description,tags",
             help="Ordered list of columns to show.")
 
 
@@ -554,6 +596,12 @@ if __name__ == "__main__":
     layouts_grp.add_argument('-G', '--subgroup-by', metavar="NAME", type=str, default=None,
             help="Create sub-sections by grouping on this field.")
 
+    layouts_grp.add_argument('-S', '--sort', metavar="NAME", type=str, default='urgency',
+            help="Field on which to sort tasks in a stack.")
+
+    layouts_grp.add_argument('-R', '--reverse', action = 'store_true',
+            help="Reverse the sort of tasks in a stack.")
+
     layouts_grp.add_argument('-T', '--swatch', metavar='NAME', type=str, default='none',
             choices = get_swatches().keys(), help="Color chart.")
 
@@ -580,6 +628,7 @@ if __name__ == "__main__":
     jdata = get_data()
     # print(json.dumps(jdata, indent=4))
 
+    print(asked.show)
     showed = asked.show.split(asked.list_separator)
     if not showed:
         show_only = None
@@ -597,41 +646,50 @@ if __name__ == "__main__":
     else:
         tasker = layouts['task'][asked.layout_task](show_only, touched = touched)
 
-    stacker = layouts['stack'][asked.layout_stack](tasker)
+    if asked.sort:
+        if asked.sort == "priority":
+            sorter = stack.sort.Priority(asked.reverse)
+        elif asked.sort == "urgency":
+            sorter = stack.sort.Priority(asked.reverse)
+        else:
+            sorter = stack.sort.Field(asked.sort, reverse = asked.reverse)
+    else:
+        sorter = None
+    stacker = layouts['stack'][asked.layout_stack](tasker, sorter = sorter)
 
     if asked.group_by:
         if asked.group_by.lower() == "status":
             group_by = group.Status()
-            sort_on = sort.OnValues(["pending","started","completed"])
+            g_sort_on = group.sort.OnValues(["pending","started","completed"])
         elif asked.group_by.lower() == "priority":
             group_by = group.Field("priority")
-            sort_on = sort.OnValues(["H","M","L",""])
+            g_sort_on = group.sort.OnValues(["H","M","L",""])
         else:
             group_by = group.Field(asked.group_by)
-            sort_on = None
+            g_sort_on = None
     else:
         group_by = group.Status()
-        sort_on = sort.OnValues(["pending","started","completed"])
+        g_sort_on = group.sort.OnValues(["pending","started","completed"])
 
     if asked.subgroup_by:
         if asked.subgroup_by.lower() == "status":
             subgroup_by = group.Status()
-            subsort_on = sort.OnValues(["pending","started","completed"])
+            g_subsort_on = group.sort.OnValues(["pending","started","completed"])
         if asked.subgroup_by.lower() == "priority":
             subgroup_by = group.Field("priority")
-            subsort_on = sort.OnValues(["H","M","L",""])
+            g_subsort_on = group.sort.OnValues(["H","M","L",""])
         else:
             subgroup_by = group.Field(asked.subgroup_by)
-            subsort_on = None
+            g_subsort_on = None
     else:
         subgroup_by = None
-        subsort_on = None
+        g_subsort_on = None
 
     if asked.layout_subsections and asked.subgroup_by:
-        subsectioner = layouts['sections'][asked.layout_subsections](stacker, subsort_on, subgroup_by)
-        sectioner = layouts['sections'][asked.layout_sections](subsectioner, sort_on, group_by)
+        subsectioner = layouts['sections'][asked.layout_subsections](stacker, g_subsort_on, subgroup_by)
+        sectioner = layouts['sections'][asked.layout_sections](subsectioner, g_sort_on, group_by)
     else:
-        sectioner = layouts['sections'][asked.layout_sections](stacker, sort_on, group_by)
+        sectioner = layouts['sections'][asked.layout_sections](stacker, g_sort_on, group_by)
 
     console = Console(theme = swatch)
     # console.rule("taskwarrior-deluxe")

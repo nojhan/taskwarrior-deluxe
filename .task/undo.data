@@ -160,3 +160,15 @@ time 1692187048
 old [description:"subgrouping: allow to add another sectionning, e.g. based on priority." entry:"1692122668" modified:"1692122680" start:"1692122680" status:"pending" tags:"feat" tags_feat:"x" uuid:"9dc6d43a-b316-4417-ad2a-e47b8a5ddc7a"]
 new [description:"subgrouping: allow to add another sectionning, e.g. based on priority." end:"1692187048" entry:"1692122668" modified:"1692187048" status:"completed" tags:"feat" tags_feat:"x" uuid:"9dc6d43a-b316-4417-ad2a-e47b8a5ddc7a"]
 ---
+time 1692214493
+old [description:"sorting: allow sorting within a stacker." entry:"1692187030" modified:"1692187030" status:"pending" tags:"feat" tags_feat:"x" uuid:"30ec6b32-a32e-4595-a24d-02ac9002fd72"]
+new [description:"sorting: allow sorting within a stacker." entry:"1692187030" modified:"1692214493" start:"1692214493" status:"pending" tags:"feat" tags_feat:"x" uuid:"30ec6b32-a32e-4595-a24d-02ac9002fd72"]
+---
+time 1692214508
+old [description:"sorting: allow sorting within a stacker." entry:"1692187030" modified:"1692214493" start:"1692214493" status:"pending" tags:"feat" tags_feat:"x" uuid:"30ec6b32-a32e-4595-a24d-02ac9002fd72"]
+new [description:"sorting: allow sorting within a stacker." end:"1692214508" entry:"1692187030" modified:"1692214508" status:"completed" tags:"feat" tags_feat:"x" uuid:"30ec6b32-a32e-4595-a24d-02ac9002fd72"]
+---
+time 1692214597
+old [description:"sort by urgency" entry:"1691773782" modified:"1692122485" priority:"H" status:"pending" tags:"feat" tags_feat:"x" uuid:"4f041f52-739a-4aca-94e6-164f43e61866"]
+new [description:"sort by urgency" end:"1692214597" entry:"1691773782" modified:"1692214597" priority:"H" status:"completed" tags:"feat" tags_feat:"x" uuid:"4f041f52-739a-4aca-94e6-164f43e61866"]
+---
