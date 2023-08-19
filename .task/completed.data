@@ -1,3 +1,4 @@
+[description:"config: handle config files from taskwarrior first" end:"1692471959" entry:"1691773951" modified:"1692471959" status:"completed" tags:"feat" tags_feat:"x" uuid:"4d822c4a-d51e-4992-8a22-6e0167ac197a"]
 [description:"sort by urgency" end:"1692214597" entry:"1691773782" modified:"1692214597" priority:"H" status:"completed" tags:"feat" tags_feat:"x" uuid:"4f041f52-739a-4aca-94e6-164f43e61866"]
 [description:"sorting: allow sorting within a stacker." end:"1692214508" entry:"1692187030" modified:"1692214508" status:"completed" tags:"feat" tags_feat:"x" uuid:"30ec6b32-a32e-4595-a24d-02ac9002fd72"]
 [description:"subgrouping: allow to add another sectionning, e.g. based on priority." end:"1692187048" entry:"1692122668" modified:"1692187048" status:"completed" tags:"feat" tags_feat:"x" uuid:"9dc6d43a-b316-4417-ad2a-e47b8a5ddc7a"]

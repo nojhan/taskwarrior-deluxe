@@ -377,7 +377,7 @@ class group:
 def call_taskwarrior(args:list[str] = ['export']) -> str:
     # Local file.
     env = os.environ.copy()
-    env["TASKDATA"] = asked.data
+    env["TASKDATA"] = ".task" # FIXME handle updir
 
     cmd = ['task'] + args
     try:
@@ -558,67 +558,73 @@ def get_layouts(kind = None, name = None):
     else:
         raise KeyError("cannot get layouts with 'name' only")
 
+# We cannot use tomllib because strings are not quoted.
+# We cannot use configparser because there is no section and because of the 'include' command.
+# FIXME handle possible values when possible.
+def parse_config(filename, default):
+    config = default
+    with open(filename, 'r') as fd:
+        for i,line in enumerate(fd.readlines()):
+            if line.strip() and line.strip()[0] != '#':
+                if '=' in line:
+                    key,value = line.split('=')
+                    if '#' in value:
+                        value = value.split('#')[0]
+                    config[key.strip()] = value.strip()
+                elif "include" in line:
+                    _,path = line.split()
+                    config['includes'].append(path.strip())
+                else:
+                    print(f"Cannot parse line {i} of config file `{filename}`, I'll ignore it.")
+    return config
+
+
+def as_bool(s):
+    if s.lower() in ["true", "yes", "y", "1"]:
+        return True
+    elif s.lower() in ["false", "no", "nope", "n", "0"]:
+        return False
+    else:
+        raise ValueError(f"Cannot interpret `{s}` as a boolean.")
+
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
-        description="XXX",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
+    default_conf = {
+        # taskwarrior
+        "report.list.columns":"id,priority,description,tags",
 
-    parser.add_argument("-s", "--show", metavar="columns", type=str, default="id,priority,description,tags",
-            help="Ordered list of columns to show.")
+        # taskwarrior-deluxe
+        "layout.task": "Raw",
+        "layout.stack": "RawTable",
+        "layout.stack.sort": "urgency",
+        "layout.stack.sort.reverse": "false", # urgency and priority are numeric.
+        "layout.subsections": "",
+        "layout.subsections.group": "",
+        "layout.sections": "Horizontal",
+        "layout.sections.group": "status",
+        "design.swatch": "none",
+        "design.icons": "none",
+        "widget.card.wrap": "25",
+    }
 
+    # TODO seek files up dans in config paths.
+    config_tw = parse_config(os.path.expanduser('~/.taskrc'), default_conf)
+    config = parse_config(os.path.expanduser('~/.twdrc'), config_tw)
 
-    config_grp = parser.add_argument_group('configuration options')
+    # for k in config:
+    #     print(k,"=",config[k])
 
-    config_grp.add_argument("-d", "--data", metavar="FILE", type=str, default=".task", nargs=1,
-            help="The input data file.")
+    list_separator = ','
 
-    config_grp.add_argument("--list-separator", metavar="CHARACTER", type=str, default=",", nargs=1,
-            help="Separator used for lists that are passed as options arguments.")
+    cmd = sys.argv[1:]
 
+    # TODO add an init command to create config and task files.
+    #if cmd[0] == "init":
 
-    layouts_grp = parser.add_argument_group('layout options')
-
-    layouts_grp.add_argument('-t', '--layout-task', metavar='NAME', type=str, default='Raw',
-            choices = get_layouts('task').keys(), help="Layout managing tasks.")
-    layouts_grp.add_argument('-k', '--layout-stack', metavar='NAME', type=str, default='RawTable',
-            choices = get_layouts('stack').keys(), help="Layout managing stacks.")
-    layouts_grp.add_argument('-c', '--layout-sections', metavar='NAME', type=str, default='Horizontal',
-            choices = get_layouts('sections').keys(), help="Layout managing sections.")
-    layouts_grp.add_argument('-C', '--layout-subsections', metavar='NAME', type=str, default=None,
-            choices = get_layouts('sections').keys(), help="Layout managing sub-sections.")
-
-    layouts_grp.add_argument('-g', '--group-by', metavar="NAME", type=str, default="status",
-            help="Create sections by grouping on this field.")
-
-    layouts_grp.add_argument('-G', '--subgroup-by', metavar="NAME", type=str, default=None,
-            help="Create sub-sections by grouping on this field.")
-
-    layouts_grp.add_argument('-S', '--sort', metavar="NAME", type=str, default='urgency',
-            help="Field on which to sort tasks in a stack.")
-
-    layouts_grp.add_argument('-R', '--reverse', action = 'store_true',
-            help="Reverse the sort of tasks in a stack.")
-
-    layouts_grp.add_argument('-T', '--swatch', metavar='NAME', type=str, default='none',
-            choices = get_swatches().keys(), help="Color chart.")
-
-    layouts_grp.add_argument('-I', '--icons', metavar='NAME', type=str, default='none',
-            choices = get_icons().keys(), help="Additional decorative characters.")
-
-    layouts_grp.add_argument('--card-wrap', metavar="NB", type=int, default=25,
-            help="Number of character at which to wrap the description of Cards tasks.")
-
-    # Capture whatever remains.
-    parser.add_argument('cmd', nargs="*")
-
-    asked = parser.parse_args()
-    # print(asked)
 
     # First pass arguments to taskwarrior and let it do its magic.
-    out = call_taskwarrior(asked.cmd)
+    out = call_taskwarrior(cmd)
     if "Description" not in out:
         print(out.strip())
     touched = parse_touched(out)
@@ -628,68 +634,67 @@ if __name__ == "__main__":
     jdata = get_data()
     # print(json.dumps(jdata, indent=4))
 
-    print(asked.show)
-    showed = asked.show.split(asked.list_separator)
+    showed = config["report.list.columns"].split(list_separator)
     if not showed:
         show_only = None
     else:
         show_only = showed
 
-    swatch = rich.theme.Theme(get_swatches(asked.swatch))
+    swatch = rich.theme.Theme(get_swatches(config["design.swatch"]))
     layouts = get_layouts()
 
-    if asked.layout_task == "Card":
-        tasker = layouts['task']['Card'](show_only, touched = touched, wrap_width = asked.card_wrap, tag_icons = get_icons(asked.icons)['tag'])
-    elif asked.layout_task == "Sheet":
-        icons = get_icons(asked.icons)
-        tasker = layouts['task']['Sheet'](show_only, touched = touched, wrap_width = asked.card_wrap, tag_icons = icons['tag'], title_ends = icons['short'])
+    if config["layout.task"] == "Card":
+        tasker = layouts['task']['Card'](show_only, touched = touched, wrap_width = int(config["widget.card.wrap"]), tag_icons = get_icons(config["design.icons"])['tag'])
+    elif config["layout.task"] == "Sheet":
+        icons = get_icons(config["design.icons"])
+        tasker = layouts['task']['Sheet'](show_only, touched = touched, wrap_width = int(config["widget.card.wrap"]), tag_icons = icons['tag'], title_ends = icons['short'])
     else:
-        tasker = layouts['task'][asked.layout_task](show_only, touched = touched)
+        tasker = layouts['task'][config["layout.task"]](show_only, touched = touched)
 
-    if asked.sort:
-        if asked.sort == "priority":
-            sorter = stack.sort.Priority(asked.reverse)
-        elif asked.sort == "urgency":
-            sorter = stack.sort.Priority(asked.reverse)
+    if config["layout.stack.sort"]:
+        if config["layout.stack.sort"] == "priority":
+            sorter = stack.sort.Priority(as_bool(config["layout.stack.sort.reverse"]))
+        elif config["layout.stack.sort"] == "urgency":
+            sorter = stack.sort.Priority(as_bool(config["layout.stack.sort.reverse"]))
         else:
-            sorter = stack.sort.Field(asked.sort, reverse = asked.reverse)
+            sorter = stack.sort.Field(config["layout.stack.sort"], reverse = as_bool(config["layout.stack.sort.reverse"]))
     else:
         sorter = None
-    stacker = layouts['stack'][asked.layout_stack](tasker, sorter = sorter)
+    stacker = layouts['stack'][config["layout.stack"]](tasker, sorter = sorter)
 
-    if asked.group_by:
-        if asked.group_by.lower() == "status":
+    if config["layout.sections.group"]:
+        if config["layout.sections.group"].lower() == "status":
             group_by = group.Status()
             g_sort_on = group.sort.OnValues(["pending","started","completed"])
-        elif asked.group_by.lower() == "priority":
+        elif config["layout.sections.group"].lower() == "priority":
             group_by = group.Field("priority")
             g_sort_on = group.sort.OnValues(["H","M","L",""])
         else:
-            group_by = group.Field(asked.group_by)
+            group_by = group.Field(config["layout.sections.group"])
             g_sort_on = None
     else:
         group_by = group.Status()
         g_sort_on = group.sort.OnValues(["pending","started","completed"])
 
-    if asked.subgroup_by:
-        if asked.subgroup_by.lower() == "status":
+    if config["layout.subsections.group"]:
+        if config["layout.subsections.group"].lower() == "status":
             subgroup_by = group.Status()
             g_subsort_on = group.sort.OnValues(["pending","started","completed"])
-        if asked.subgroup_by.lower() == "priority":
+        if config["layout.subsections.group"].lower() == "priority":
             subgroup_by = group.Field("priority")
             g_subsort_on = group.sort.OnValues(["H","M","L",""])
         else:
-            subgroup_by = group.Field(asked.subgroup_by)
+            subgroup_by = group.Field(config["layout.subsections.group"])
             g_subsort_on = None
     else:
         subgroup_by = None
         g_subsort_on = None
 
-    if asked.layout_subsections and asked.subgroup_by:
-        subsectioner = layouts['sections'][asked.layout_subsections](stacker, g_subsort_on, subgroup_by)
-        sectioner = layouts['sections'][asked.layout_sections](subsectioner, g_sort_on, group_by)
+    if config["layout.subsections"] and config["layout.subsections.group"]:
+        subsectioner = layouts['sections'][config["layout.subsections"]](stacker, g_subsort_on, subgroup_by)
+        sectioner = layouts['sections'][config["layout.sections"]](subsectioner, g_sort_on, group_by)
     else:
-        sectioner = layouts['sections'][asked.layout_sections](stacker, g_sort_on, group_by)
+        sectioner = layouts['sections'][config["layout.sections"]](stacker, g_sort_on, group_by)
 
     console = Console(theme = swatch)
     # console.rule("taskwarrior-deluxe")
