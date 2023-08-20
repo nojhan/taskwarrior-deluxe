@@ -15,6 +15,7 @@ It essentially features:
 ![](screenshots/screenshot_subgroup_kanban.png)
 ![](screenshots/screenshot_groups.png)
 ![](screenshots/screenshot_chalky_sheets.png)
+![](screenshots/screenshot_carbon_sheets_kanban.png)
 
 Taskwarrior-deluxe is in early ~~aplha~~ ~~alhpa~~ alpha stage and not ready for production.
 
