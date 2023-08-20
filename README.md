@@ -1,5 +1,7 @@
 Taskwarrior-deluxe is a wrapper for the [Taskwarrior](https://taskwarrior.org/) task manager.
 
+![A crested corinthian helmet drawn in colors, over a grey circle.](taskwarrior-deluxe-emblem.svg)
+
 Taskwarrior-deluxe aims at being a proof of concept of how the task display may be better than the current one.
 
 It essentially features:
