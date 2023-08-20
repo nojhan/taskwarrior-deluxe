@@ -4,7 +4,8 @@ import os
 import re
 import sys
 import json
-import argparse
+import queue
+import pathlib
 import textwrap
 import subprocess
 
@@ -561,8 +562,8 @@ def get_layouts(kind = None, name = None):
 # We cannot use tomllib because strings are not quoted.
 # We cannot use configparser because there is no section and because of the 'include' command.
 # FIXME handle possible values when possible.
-def parse_config(filename, default):
-    config = default
+def parse_config(filename, current):
+    config = current
     with open(filename, 'r') as fd:
         for i,line in enumerate(fd.readlines()):
             if line.strip() and line.strip()[0] != '#':
@@ -588,6 +589,49 @@ def as_bool(s):
         raise ValueError(f"Cannot interpret `{s}` as a boolean.")
 
 
+def upsearch(filename, at = pathlib.Path.cwd()):
+    current = at
+    root = pathlib.Path(current.root)
+
+    while current != root:
+        found = current / filename
+        if found.exists():
+            return found
+        current = current.parent
+
+    return None
+
+
+def load_configs(fname, current):
+    config = current
+
+    # First, system.
+    p = pathlib.Path("/etc/taskwarrior") / pathlib.Path(fname)
+    if p.exists():
+        config = parse_config(p, config)
+
+    # Second, user.
+    p = pathlib.Path(os.path.expanduser('~')) / pathlib.Path(fname)
+    if p.exists():
+        config = parse_config(p, config)
+
+    # Third, upper dirs.
+    # LIFO queue allows to fill from current dir,
+    # then read from upper dir.
+    updirs = queue.LifoQueue()
+    here = pathlib.Path.cwd()
+    f = upsearch(fname, here)
+    while f:
+        updirs.put(f)
+        f = upsearch(fname, f.parent.parent)
+
+    while not updirs.empty():
+        f = updirs.get()
+        config = parse_config(f, config)
+
+    return config
+
+
 if __name__ == "__main__":
 
     default_conf = {
@@ -608,9 +652,10 @@ if __name__ == "__main__":
         "widget.card.wrap": "25",
     }
 
-    # TODO seek files up dans in config paths.
-    config_tw = parse_config(os.path.expanduser('~/.taskrc'), default_conf)
-    config = parse_config(os.path.expanduser('~/.twdrc'), config_tw)
+    # First, taskwarrior's config...
+    config = load_configs(".taskrc", default_conf)
+    # ... overwritten by TWD config.
+    config = load_configs(".twdrc", config)
 
     # for k in config:
     #     print(k,"=",config[k])
