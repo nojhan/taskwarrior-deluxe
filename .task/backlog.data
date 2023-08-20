@@ -52,3 +52,5 @@
 {"description":"config: handle config files from taskwarrior first","entry":"20230811T171231Z","modified":"20230817T154131Z","start":"20230817T154131Z","status":"pending","uuid":"4d822c4a-d51e-4992-8a22-6e0167ac197a","tags":["feat"]}
 {"description":"theme config: use taskwarrior theme config and extends from there.","entry":"20230819T190428Z","modified":"20230819T190428Z","status":"pending","uuid":"6b248843-1b11-487b-85e8-a96e668f6772","tags":["feat","themes"]}
 {"description":"config: handle config files from taskwarrior first","end":"20230819T190559Z","entry":"20230811T171231Z","modified":"20230819T190559Z","status":"completed","uuid":"4d822c4a-d51e-4992-8a22-6e0167ac197a","tags":["feat"]}
+{"description":"screenshots: to be added to the README on Github.","entry":"20230820T133634Z","modified":"20230820T133634Z","status":"pending","uuid":"b5f1d2b6-9e2f-458f-afab-880c52121c82","tags":["website"]}
+{"description":"screenshots: to be added to the README on Github.","entry":"20230820T133634Z","modified":"20230820T133640Z","start":"20230820T133640Z","status":"pending","uuid":"b5f1d2b6-9e2f-458f-afab-880c52121c82","tags":["website"]}

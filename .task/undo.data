@@ -190,3 +190,10 @@ time 1692471959
 old [description:"config: handle config files from taskwarrior first" entry:"1691773951" modified:"1692286891" start:"1692286891" status:"pending" tags:"feat" tags_feat:"x" uuid:"4d822c4a-d51e-4992-8a22-6e0167ac197a"]
 new [description:"config: handle config files from taskwarrior first" end:"1692471959" entry:"1691773951" modified:"1692471959" status:"completed" tags:"feat" tags_feat:"x" uuid:"4d822c4a-d51e-4992-8a22-6e0167ac197a"]
 ---
+time 1692538594
+new [description:"screenshots: to be added to the README on Github." entry:"1692538594" modified:"1692538594" status:"pending" tags:"website" tags_website:"x" uuid:"b5f1d2b6-9e2f-458f-afab-880c52121c82"]
+---
+time 1692538600
+old [description:"screenshots: to be added to the README on Github." entry:"1692538594" modified:"1692538594" status:"pending" tags:"website" tags_website:"x" uuid:"b5f1d2b6-9e2f-458f-afab-880c52121c82"]
+new [description:"screenshots: to be added to the README on Github." entry:"1692538594" modified:"1692538600" start:"1692538600" status:"pending" tags:"website" tags_website:"x" uuid:"b5f1d2b6-9e2f-458f-afab-880c52121c82"]
+---
