@@ -420,8 +420,10 @@ def call_taskwarrior(args:list[str] = ['export'], taskfile = ".task") -> str:
         return out.decode('utf-8')
 
 
-def get_data(taskfile):
-    out = call_taskwarrior(['export'], taskfile)
+def get_data(taskfile, filter = None):
+    if not filter:
+        filter = []
+    out = call_taskwarrior(filter+['export'], taskfile)
     try:
         jdata = json.loads(out)
     except json.decoder.JSONDecodeError as exc:
@@ -665,6 +667,21 @@ def find_tasks(fname, current, config):
         return None
 
 
+def parse_filter(cmd):
+    tw_commands = [
+        "active", "all", "annotate", "append", "blocked", "blocking", "burndown", "burndown", "burndown", "completed",
+        "count", "delete", "denotate", "done", "duplicate", "edit", "export", "ghistory", "ghistory", "ghistory", "ghistory",
+        "history", "history", "history", "history", "ids", "information", "list", "long", "ls", "minimal",
+        "modify", "newest", "next", "oldest", "overdue", "prepend", "projects", "purge", "ready", "recurring", "start",
+        "stats", "stop", "summary", "tags", "timesheet", "unblocked", "uuids", "waiting",
+    ]
+    for i,w in enumerate(cmd):
+        if w in tw_commands:
+            filter = cmd[:i]
+            return filter
+    return None
+
+
 if __name__ == "__main__":
 
     default_conf = {
@@ -683,6 +700,7 @@ if __name__ == "__main__":
         "design.swatch": "none",
         "design.icons": "none",
         "widget.card.wrap": "25",
+        "list.filtered": "false",
     }
 
     # First, taskwarrior's config...
@@ -715,7 +733,11 @@ if __name__ == "__main__":
     touched = parse_touched(out)
 
     # Then call again to get the resulting data.
-    jdata = get_data(taskfile)
+    if as_bool(config["list.filtered"]):
+        filter = parse_filter(cmd)
+        jdata = get_data(taskfile, filter)
+    else:
+        jdata = get_data(taskfile, filter = None)
     # print(json.dumps(jdata, indent=4))
 
     list_separator = ","

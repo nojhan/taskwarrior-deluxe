@@ -248,3 +248,19 @@ time 1692600330
 old [description:"more themes" entry:"1691864624" modified:"1691990020" start:"1691990020" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
 new [description:"more themes" entry:"1691864624" modified:"1692600330" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
 ---
+time 1692638018
+old [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692600256" priority:"H" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+new [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692638018" priority:"H" start:"1692638018" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+---
+time 1692638184
+old [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692638018" priority:"H" start:"1692638018" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+new [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692638184" priority:"H" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+---
+time 1692638206
+old [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692638184" priority:"H" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+new [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692638206" priority:"H" start:"1692638206" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+---
+time 1692638324
+old [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692638206" priority:"H" start:"1692638206" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+new [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" end:"1692638324" entry:"1692600138" modified:"1692638324" priority:"H" status:"completed" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+---
