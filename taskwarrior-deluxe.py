@@ -153,7 +153,7 @@ class task:
             return panel
 
     class Sheet(Card):
-        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icons = "🏷  ", title_ends=["\n "," "]):
+        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icons = "🏷  ", title_ends=["\n",""]):
             super().__init__(show_only, order, touched = touched, wrap_width = wrap_width, tag_icons = tag_icons)
             self.title_ends = title_ends
 
@@ -227,8 +227,9 @@ class stack:
                 return sorted(tasks, key = p_value, reverse = self.reverse)
 
     class RawTable(Stacker):
-        def __init__(self, tasker, sorter = None):
+        def __init__(self, tasker, sorter = None, tag_icons = ["+",""]):
             super().__init__(tasker, sorter = sorter)
+            self.tag_icons = tag_icons
 
         def __call__(self, tasks):
             keys = self.tasker.show_only
@@ -260,11 +261,22 @@ class stack:
                                 row.append( rich.text.Text(short, style='short_description', end='') + \
                                             rich.text.Text(':', style='default', end='') + \
                                             rich.text.Text(desc, style='long_description', end='') )
+
                             else:
                                 row.append( rich.text.Text(val, style=k) )
                         elif type(val) == list:
-                            # FIXME use Columns if does not expand.
-                            row.append( rich.text.Text(" ".join(val), style=k) )
+                            if k == 'tags':
+                                tags = rich.text.Text("")
+                                for t in val:
+                                    # FIXME use Columns if/when it does not expand.
+                                    tags += \
+                                        rich.text.Text(self.tag_icons[0], style="tags_ends") + \
+                                        rich.text.Text(t, style=k) + \
+                                        rich.text.Text(self.tag_icons[1], style="tags_ends") + \
+                                        " "
+                                row.append( tags )
+                            else:
+                                row.append( rich.text.Text(" ".join(val), style=k) )
                         else:
                             row.append( rich.text.Text(str(val), style=k) )
                     else:
@@ -439,7 +451,7 @@ def get_swatches(name = None):
             'status': '',
             'uuid': '',
             'tags': '',
-            'tags': '',
+            'tags_ends': '',
             'urgency': '',
             'row_odd': '',
             'row_even' : '',
@@ -459,7 +471,7 @@ def get_swatches(name = None):
             'status': 'bold italic white',
             'uuid': '',
             'tags': 'color(33)',
-            'tags': 'color(33)',
+            'tags_ends': 'color(26)',
             'urgency': 'color(219)',
             'row_odd': 'on #262121',
             'row_even' : 'on #2d2929',
@@ -733,7 +745,11 @@ if __name__ == "__main__":
             sorter = stack.sort.Field(config["layout.stack.sort"], reverse = as_bool(config["layout.stack.sort.reverse"]))
     else:
         sorter = None
-    stacker = layouts['stack'][config["layout.stack"]](tasker, sorter = sorter)
+
+    if config["layout.stack"] == "RawTable":
+        stacker = layouts['stack']["RawTable"](tasker, sorter = sorter, tag_icons = get_icons(config["design.icons"])['tag'])
+    else:
+        stacker = layouts['stack'][config["layout.stack"]](tasker, sorter = sorter)
 
     if config["layout.sections.group"]:
         if config["layout.sections.group"].lower() == "status":
