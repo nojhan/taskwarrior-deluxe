@@ -225,3 +225,26 @@ time 1692598805
 old [description:"init command: add a command to initialize a local .task dir and\/or config file.s" entry:"1692121630" modified:"1692598684" priority:"M" start:"1692598684" status:"pending" tags:"feat" tags_feat:"x" uuid:"81fc6480-e8e7-4dd4-9f01-a00f34463135"]
 new [description:"init command: add a command to initialize a local .task dir and\/or config file.s" entry:"1692121630" modified:"1692598805" priority:"M" status:"pending" tags:"feat" tags_feat:"x" uuid:"81fc6480-e8e7-4dd4-9f01-a00f34463135"]
 ---
+time 1692599798
+old [description:"init command: add a command to initialize a local .task dir and\/or config file.s" entry:"1692121630" modified:"1692598805" priority:"M" status:"pending" tags:"feat" tags_feat:"x" uuid:"81fc6480-e8e7-4dd4-9f01-a00f34463135"]
+new [description:"init command: add a command to initialize a local .task dir and\/or config file.s" entry:"1692121630" modified:"1692599798" priority:"M" start:"1692599798" status:"pending" tags:"feat" tags_feat:"x" uuid:"81fc6480-e8e7-4dd4-9f01-a00f34463135"]
+---
+time 1692600138
+new [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692600138" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+---
+time 1692600151
+old [description:"init command: add a command to initialize a local .task dir and\/or config file.s" entry:"1692121630" modified:"1692599798" priority:"M" start:"1692599798" status:"pending" tags:"feat" tags_feat:"x" uuid:"81fc6480-e8e7-4dd4-9f01-a00f34463135"]
+new [description:"init command: add a command to initialize a local .task dir and\/or config file.s" end:"1692600151" entry:"1692121630" modified:"1692600151" priority:"M" status:"completed" tags:"feat" tags_feat:"x" uuid:"81fc6480-e8e7-4dd4-9f01-a00f34463135"]
+---
+time 1692600256
+old [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692600138" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+new [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692600256" priority:"H" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
+---
+time 1692600275
+old [description:"theme config: use taskwarrior theme config and extends from there." entry:"1692471868" modified:"1692471868" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"6b248843-1b11-487b-85e8-a96e668f6772"]
+new [description:"theme config: use taskwarrior theme config and extends from there." entry:"1692471868" modified:"1692600275" priority:"H" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"6b248843-1b11-487b-85e8-a96e668f6772"]
+---
+time 1692600330
+old [description:"more themes" entry:"1691864624" modified:"1691990020" start:"1691990020" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+new [description:"more themes" entry:"1691864624" modified:"1692600330" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+---

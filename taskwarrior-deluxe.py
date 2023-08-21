@@ -16,6 +16,7 @@ from rich.columns import Columns
 
 error_codes = {
     "NO_DATA_FILE": 100,
+    "CANNOT_INIT": 200,
 }
 
 
@@ -385,10 +386,10 @@ class group:
             return groups
 
 
-def call_taskwarrior(args:list[str] = ['export']) -> str:
+def call_taskwarrior(args:list[str] = ['export'], taskfile = ".task") -> str:
     # Local file.
     env = os.environ.copy()
-    env["TASKDATA"] = ".task" # FIXME handle updir
+    env["TASKDATA"] = taskfile
 
     cmd = ['task'] + args
     try:
@@ -407,8 +408,8 @@ def call_taskwarrior(args:list[str] = ['export']) -> str:
         return out.decode('utf-8')
 
 
-def get_data():
-    out = call_taskwarrior(['export'])
+def get_data(taskfile):
+    out = call_taskwarrior(['export'], taskfile)
     try:
         jdata = json.loads(out)
     except json.decoder.JSONDecodeError as exc:
@@ -686,19 +687,23 @@ if __name__ == "__main__":
 
     cmd = sys.argv[1:]
 
-    # TODO add an init command to create config and task files.
-    #if cmd[0] == "init":
-
+    if len(cmd) == 1 and cmd[0] == "init":
+        try:
+            os.mkdir(".task")
+        except Exception as err:
+            error("CANNOT_INIT", f"Cannot init task database here: {err}")
+        else:
+            print("Empty taskwarrior database initialized in", pathlib.Path.cwd())
+            sys.exit(0)
 
     # First pass arguments to taskwarrior and let it do its magic.
-    out = call_taskwarrior(cmd)
+    out = call_taskwarrior(cmd, taskfile)
     if "Description" not in out:
         print(out.strip())
     touched = parse_touched(out)
-    # print("Touched:",touched)
 
-    # Then get the resulting data.
-    jdata = get_data()
+    # Then call again to get the resulting data.
+    jdata = get_data(taskfile)
     # print(json.dumps(jdata, indent=4))
 
     list_separator = ","
