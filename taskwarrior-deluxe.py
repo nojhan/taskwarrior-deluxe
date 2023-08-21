@@ -14,6 +14,16 @@ import rich
 from rich.console import Console
 from rich.columns import Columns
 
+error_codes = {
+    "NO_DATA_FILE": 100,
+}
+
+
+def error(name,msg):
+    print("ERROR:",msg)
+    sys.exit(error_codes[name])
+
+
 class Widget:
     pass
 
@@ -408,7 +418,7 @@ def get_data():
 
 
 def parse_touched(out):
-    return re.findall('[ModifyingCreated]+ task ([0-9]+)', out)
+    return re.findall('(?:Modifying|Created|Starting|Stopping)+ task ([0-9]+)', out)
 
 
 def get_swatches(name = None):
@@ -602,7 +612,7 @@ def upsearch(filename, at = pathlib.Path.cwd()):
     return None
 
 
-def load_configs(fname, current):
+def find_config(fname, current):
     config = current
 
     # First, system.
@@ -632,6 +642,16 @@ def load_configs(fname, current):
     return config
 
 
+def find_tasks(fname, current, config):
+    tfile = upsearch(fname, current)
+    if tfile:
+        return tfile
+    elif "data.location" in config:
+        return config["data.location"]
+    else:
+        return None
+
+
 if __name__ == "__main__":
 
     default_conf = {
@@ -653,14 +673,16 @@ if __name__ == "__main__":
     }
 
     # First, taskwarrior's config...
-    config = load_configs(".taskrc", default_conf)
+    config = find_config(".taskrc", default_conf)
     # ... overwritten by TWD config.
-    config = load_configs(".twdrc", config)
+    config = find_config(".twdrc", config)
 
     # for k in config:
     #     print(k,"=",config[k])
 
-    list_separator = ','
+    taskfile = find_tasks(".task", pathlib.Path.cwd(), config)
+    if not taskfile:
+        error("NO_DATA_FILE", "Cannot find a data file here, in a parent directory, or configured.")
 
     cmd = sys.argv[1:]
 
@@ -679,6 +701,7 @@ if __name__ == "__main__":
     jdata = get_data()
     # print(json.dumps(jdata, indent=4))
 
+    list_separator = ","
     showed = config["report.list.columns"].split(list_separator)
     if not showed:
         show_only = None

@@ -1,3 +1,4 @@
+[description:"find data updir: try to find .task on upper directories if not in the existing one" end:"1692598477" entry:"1691773581" modified:"1692598477" priority:"H" status:"completed" tags:"data,feat" tags_data:"x" tags_feat:"x" uuid:"b4ee0b55-0bb3-4a2f-b7c5-87cd70dd0ff0"]
 [description:"screenshots: to be added to the README on Github." end:"1692546052" entry:"1692538594" modified:"1692546052" status:"completed" tags:"website" tags_website:"x" uuid:"b5f1d2b6-9e2f-458f-afab-880c52121c82"]
 [description:"config: handle config files from taskwarrior first" end:"1692471959" entry:"1691773951" modified:"1692471959" status:"completed" tags:"feat" tags_feat:"x" uuid:"4d822c4a-d51e-4992-8a22-6e0167ac197a"]
 [description:"sort by urgency" end:"1692214597" entry:"1691773782" modified:"1692214597" priority:"H" status:"completed" tags:"feat" tags_feat:"x" uuid:"4f041f52-739a-4aca-94e6-164f43e61866"]
