@@ -264,3 +264,7 @@ time 1692638324
 old [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" entry:"1692600138" modified:"1692638206" priority:"H" start:"1692638206" status:"pending" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
 new [description:"allow filters: when invoked with filtered command, execute, then display filtered export — or point to altered tasks?" end:"1692638324" entry:"1692600138" modified:"1692638324" priority:"H" status:"completed" tags:"feat" tags_feat:"x" uuid:"b2233e70-b1fd-41db-b240-0fc265e3406e"]
 ---
+time 1692953258
+old [description:"semantic colors: allow coloring by values, not just fields." entry:"1692255328" modified:"1692255328" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"1a5aab4a-0c2b-444f-9259-6eddc29b9791"]
+new [description:"semantic colors: allow coloring by values, not just fields." entry:"1692255328" modified:"1692953258" start:"1692953258" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"1a5aab4a-0c2b-444f-9259-6eddc29b9791"]
+---

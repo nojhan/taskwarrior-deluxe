@@ -369,7 +369,11 @@ class group:
     class sort:
         class OnValues(SectionSorter):
             def __init__(self, values):
-                self.values = values
+                if values:
+                    self.values = values
+                else:
+                    print("WARNING: no values.")
+                    self.values = []
 
             def __call__(self):
                 return self.values
@@ -695,8 +699,10 @@ if __name__ == "__main__":
         "layout.stack.sort.reverse": "false", # urgency and priority are numeric.
         "layout.subsections": "",
         "layout.subsections.group": "",
+        "layout.subsections.group.show": "",
         "layout.sections": "Horizontal",
         "layout.sections.group": "status",
+        "layout.sections.group.show": "",
         "design.swatch": "none",
         "design.icons": "none",
         "widget.card.wrap": "25",
@@ -774,12 +780,19 @@ if __name__ == "__main__":
         stacker = layouts['stack'][config["layout.stack"]](tasker, sorter = sorter)
 
     if config["layout.sections.group"]:
+        values = config["layout.sections.group.show"].split(list_separator)
+        if values == ['']:
+            values = []
         if config["layout.sections.group"].lower() == "status":
             group_by = group.Status()
-            g_sort_on = group.sort.OnValues(["pending","started","completed"])
+            if not values:
+                values = ["pending","started","completed"]
+            g_sort_on = group.sort.OnValues( values )
         elif config["layout.sections.group"].lower() == "priority":
             group_by = group.Field("priority")
-            g_sort_on = group.sort.OnValues(["H","M","L",""])
+            if not values:
+                values = ["H","M","L",""]
+            g_sort_on = group.sort.OnValues( values )
         else:
             group_by = group.Field(config["layout.sections.group"])
             g_sort_on = None
@@ -788,12 +801,19 @@ if __name__ == "__main__":
         g_sort_on = group.sort.OnValues(["pending","started","completed"])
 
     if config["layout.subsections.group"]:
+        values = config["layout.subsections.group.show"].split(list_separator)
+        if values == ['']:
+            values = []
         if config["layout.subsections.group"].lower() == "status":
             subgroup_by = group.Status()
-            g_subsort_on = group.sort.OnValues(["pending","started","completed"])
+            if not values:
+                values = ["pending","started","completed"]
+            g_sort_on = group.sort.OnValues( values )
         if config["layout.subsections.group"].lower() == "priority":
             subgroup_by = group.Field("priority")
-            g_subsort_on = group.sort.OnValues(["H","M","L",""])
+            if not values:
+                values = ["H","M","L",""]
+            g_subsort_on = group.sort.OnValues( values )
         else:
             subgroup_by = group.Field(config["layout.subsections.group"])
             g_subsort_on = None
