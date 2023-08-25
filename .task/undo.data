@@ -268,3 +268,27 @@ time 1692953258
 old [description:"semantic colors: allow coloring by values, not just fields." entry:"1692255328" modified:"1692255328" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"1a5aab4a-0c2b-444f-9259-6eddc29b9791"]
 new [description:"semantic colors: allow coloring by values, not just fields." entry:"1692255328" modified:"1692953258" start:"1692953258" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"1a5aab4a-0c2b-444f-9259-6eddc29b9791"]
 ---
+time 1692954664
+old [description:"handle prompts: for some commands like delete, taskwarrior setup an interactive prompt, which needs to be handled." entry:"1692122614" modified:"1692122614" status:"pending" tags:"bug" tags_bug:"x" uuid:"e2480c4b-4c73-4d03-8568-82f14ade7b38"]
+new [description:"handle prompts: for some commands like delete, taskwarrior setup an interactive prompt, which needs to be handled." entry:"1692122614" modified:"1692954664" status:"pending" tags:"bug,wontfix" tags_bug:"x" tags_wontfix:"x" uuid:"e2480c4b-4c73-4d03-8568-82f14ade7b38"]
+---
+time 1692954669
+old [description:"handle prompts: for some commands like delete, taskwarrior setup an interactive prompt, which needs to be handled." entry:"1692122614" modified:"1692954664" status:"pending" tags:"bug,wontfix" tags_bug:"x" tags_wontfix:"x" uuid:"e2480c4b-4c73-4d03-8568-82f14ade7b38"]
+new [description:"handle prompts: for some commands like delete, taskwarrior setup an interactive prompt, which needs to be handled." end:"1692954669" entry:"1692122614" modified:"1692954669" status:"completed" tags:"bug,wontfix" tags_bug:"x" tags_wontfix:"x" uuid:"e2480c4b-4c73-4d03-8568-82f14ade7b38"]
+---
+time 1692954684
+old [description:"more themes" entry:"1691864624" modified:"1692600330" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+new [description:"more themes" entry:"1691864624" modified:"1692954684" priority:"L" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+---
+time 1692954693
+old [description:"fix escaped add: when passing add with escapable characters, bug ensues." entry:"1691774077" modified:"1691774077" status:"pending" tags:"bug" tags_bug:"x" uuid:"79e1ba11-15ae-489f-9868-ab6adea40a91"]
+new [description:"fix escaped add: when passing add with escapable characters, bug ensues." entry:"1691774077" modified:"1692954693" priority:"L" status:"pending" tags:"bug" tags_bug:"x" uuid:"79e1ba11-15ae-489f-9868-ab6adea40a91"]
+---
+time 1692954709
+old [description:"hide old done tasks: Hide tasks with last status that haven t been touched since a long time." entry:"1691773751" modified:"1692122496" priority:"M" status:"pending" tags:"feat" tags_feat:"x" uuid:"e18707b4-304d-41f3-8504-89476cd796f5"]
+new [description:"hide old done tasks: Hide tasks with last status that haven t been touched since a long time." entry:"1691773751" modified:"1692954709" priority:"M" status:"pending" tags:"feat,wontfix" tags_feat:"x" tags_wontfix:"x" uuid:"e18707b4-304d-41f3-8504-89476cd796f5"]
+---
+time 1692954719
+old [description:"hide old done tasks: Hide tasks with last status that haven t been touched since a long time." entry:"1691773751" modified:"1692954709" priority:"M" status:"pending" tags:"feat,wontfix" tags_feat:"x" tags_wontfix:"x" uuid:"e18707b4-304d-41f3-8504-89476cd796f5"]
+new [description:"hide old done tasks: Hide tasks with last status that haven t been touched since a long time." end:"1692954719" entry:"1691773751" modified:"1692954719" priority:"M" status:"completed" tags:"feat,wontfix" tags_feat:"x" tags_wontfix:"x" uuid:"e18707b4-304d-41f3-8504-89476cd796f5"]
+---

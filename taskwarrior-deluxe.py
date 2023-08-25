@@ -317,7 +317,7 @@ class sections:
             groups = self.group(tasks)
             for key in self.order(groups):
                 if key in groups:
-                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = rich.text.Text(str(key).upper(), style=key), title_align = "left", expand = False))
+                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = rich.text.Text(str(key).upper(), style=key), title_align = "left", expand = True))
             return rich.console.Group(*sections)
 
     class Horizontal(Sectioner):
