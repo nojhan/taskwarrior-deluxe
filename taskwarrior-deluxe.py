@@ -36,22 +36,26 @@ class Widget:
             value = re.sub(r"\s", "_", val)
             keyval = f"{key}.{value}"
             if key in self.config or keyval in self.config:
+                # key and keyval in config.
                 if   key in     self.config and keyval     in self.config:
+                    # "on" in key and not in keyval.
                     if   "on"     in self.config[key] and "on" not in self.config[keyval]:
                         return f"{self.config[keyval]} {self.config[key]}"
+                    # "on" not in key and in keyval.
                     elif "on" not in self.config[key] and "on"     in self.config[keyval]:
                         return f"{self.config[key]} {self.config[keyval]}"
-                    elif "on" not in self.config[key] and "on" not in self.config[keyval]:
+                    else: # "on" not in key and not in keyval or "on" in key and in keyval
+                        # Defaults to keyval having precedence if nothing is specified.
+                        swatch = self.config[keyval]
                         korder = self.config["rule.precedence.color"].split(self.list_separator)
-                        swatch = ""
                         for k in korder: # FIXME reverse korder?
                             if k in keyval:
-                                swatch += " " + self.config[keyval]
+                                swatch = self.config[keyval]
+                                break
                             if k in key:
-                                swatch += " " + self.config[key]
+                                swatch = self.config[key]
+                                break
                         return swatch
-                    else: # "on" in self.config[key] and in self.config[keyval]
-                        raise ValueError(f"Cannot combine `{self.config[key]}` and `{self.config[keyval]}`")
 
                 elif key in     self.config and keyval not in self.config:
                     return self.config[key]
@@ -367,7 +371,12 @@ class sections:
             groups = self.group(tasks)
             for key in self.order(groups):
                 if key in groups:
-                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = self.rtext(str(key).upper(), f"{key}"), title_align = "left", expand = True))
+                    if self.grouper.field:
+                        swatch = f"{self.grouper.field}.{key}"
+                    else:
+                        swatch = f"{key}"
+                    val = str(key).upper()
+                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = self.rtext(val, swatch), title_align = "left", expand = True, border_style = self.swatch_of(swatch, val)))
             return rich.console.Group(*sections)
 
     class Horizontal(Sectioner):
@@ -675,7 +684,8 @@ if __name__ == "__main__":
 
     default_conf = {
         # taskwarrior
-        "report.list.columns":"id,priority,description,tags",
+        "report.list.columns": "id,priority,description,tags",
+        "rule.precedence.color": "",
 
         # taskwarrior-deluxe
         "layout.task": "Raw",
