@@ -30,7 +30,7 @@ class Widget:
         self.config = config
         self.list_separator = list_separator
 
-    def swatch_of(key, val, prefix = "color."):
+    def swatch_of(self, key, val, prefix = "color."):
         if key:
             key = prefix+key
             value = re.sub(r"\s", "_", val)
@@ -62,9 +62,8 @@ class Widget:
         else: # Not key.
             return ""
 
-
-    def rtext(val, key, prefix = "color."):
-        return rich.text.Text(val, style=swatch_of(key, val, prefix))
+    def rtext(self, val, swatch, prefix = "color.", end="\n"):
+        return rich.text.Text(val, style=self.swatch_of(swatch, val, prefix), end=end)
 
 
 class Tasker(Widget):
@@ -137,16 +136,16 @@ class task:
             sid = str(task["id"])
             if ":" in task["description"]:
                 short, desc = task["description"].split(":")
-                title = rich.text.Text(sid, style="color.id") + rich.text.Text(":", style="default") + rich.text.Text(short.strip(), style="color.description.short")
-                desc = rich.text.Text("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)), style="color.description.long")
+                title = self.rtext(sid, "id") + rich.text.Text(":", style="default") + self.rtext(short.strip(), "description.short")
+                desc = rtext("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)), "description.long")
             elif len(task["description"]) <= self.wrap_width - 8:
                 d = task["description"].strip()
-                title = rich.text.Text(sid, style="color.id") + rich.text.Text(":", style="default") + rich.text.Text(d, style="color.description.short")
+                title = self.rtext(sid, "id") + rich.text.Text(":", style="default") + self.rtext(d, "description.short")
                 desc = None
             else:
                 desc = task["description"]
-                desc = rich.text.Text("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)), style="color.description")
-                title = rich.text.Text(sid, style="color.id")
+                desc = self.rtext("\n".join(textwrap.wrap(desc.strip(), self.wrap_width)),"description")
+                title = self.rtext(sid, "id")
 
             segments = []
             for key in self.show_only:
@@ -154,22 +153,22 @@ class task:
                     val = task[key]
                     segment = f"{key}: "
                     if type(val) == str:
-                        segments.append(rich.text.Text(segment+val, style=f"color.{key}"))
+                        segments.append( self.rtext(segment+val, f"{key}") )
                     elif type(val) == list:
                         # FIXME Columns does not fit.
                         # g = Columns([f"+{t}" for t in val], expand = False)
                         lst = []
                         for t in val:
                            lst.append( \
-                               rich.text.Text(self.tag_icons[0], style="color.tags.ends") + \
-                               rich.text.Text(t, style=f"color.{key}") + \
-                               rich.text.Text(self.tag_icons[1], style="color.tags.ends") \
+                               self.rtext(self.tag_icons[0], "tags.ends") + \
+                               self.rtext(t, f"{key}") + \
+                               self.rtext(self.tag_icons[1], "tags.ends") \
                            )
                         g = rich.console.Group(*lst, fit = True)
                         # g = rich.console.Group(*[rich.text.Text(f"{self.tag_icons[0]}{t}{self.tag_icons[1]}", style=f"color.{key}") for t in val], fit = True)
                         segments.append(g)
                     else:
-                        segments.append(rich.text.Text(segment+str(val), style=f"color.{key}"))
+                        segments.append(self.rtext(segment+str(val), f"{key}"))
 
             # FIXME Columns does not fit.
             # cols = Columns(segments)
@@ -202,9 +201,9 @@ class task:
         def __call__(self, task):
             title, body = self._make(task)
 
-            t = rich.text.Text(self.title_ends[0], style="color.description.short.ends") + \
+            t = self.rtext(self.title_ends[0], "description.short.ends") + \
                 title + \
-                rich.text.Text(self.title_ends[1], style="color.description.short.ends")
+                self.rtext(self.title_ends[1], "description.short.ends")
 
             sid = str(task["id"])
             if sid in self.touched:
@@ -284,7 +283,7 @@ class stack:
             for task in self.sorter(tasks):
                 taskers = self.tasker(task)
                 if str(task["id"]) in self.tasker.touched:
-                    row = [rich.text.Text("▶", style = "color.touched")]
+                    row = [self.rtext("▶", "r.touched")]
                 else:
                     row = [""]
 
@@ -304,13 +303,13 @@ class stack:
                                 # ))
                                 # FIXME style leaks on all texts:
                                 # (Note that "default" is a special color for Rich.)
-                                row.append( rich.text.Text(short, style="color.description.short", end="") + \
+                                row.append( self.rtext(short, "description.short", end="") + \
                                             rich.text.Text(":", style="default", end="") + \
-                                            rich.text.Text(desc, style="color.description.long", end="") )
+                                            self.rtext(desc, "description.long", end="") )
 
                             # Strings, but not description.
                             else:
-                                row.append( rich.text.Text(val, style=f"color.{k}") )
+                                row.append( self.rtext(val, f"{k}") )
                         ##### List keys. #####
                         elif type(val) == list:
                             # Tags are a special case.
@@ -319,17 +318,17 @@ class stack:
                                 for t in val:
                                     # FIXME use Columns if/when it does not expand.
                                     tags += \
-                                        rich.text.Text(self.tag_icons[0], style="color.tags.ends") + \
-                                        rich.text.Text(t, style=f"color.{k}") + \
-                                        rich.text.Text(self.tag_icons[1], style="color.tags.ends") + \
+                                        self.rtext(self.tag_icons[0], "tags.ends") + \
+                                        self.rtext(t, f"{k}") + \
+                                        self.rtext(self.tag_icons[1], "tags.ends") + \
                                         " "
                                 row.append( tags )
                             # List, but not tags.
                             else:
-                                row.append( rich.text.Text(" ".join(val), style=f"color.{k}") )
+                                row.append( self.rtext(" ".join(val), f"{k}") )
                         ##### Other type of keys. #####
                         else:
-                            row.append( rich.text.Text(str(val), style=f"color.{k}") )
+                            row.append( self.rtext(str(val), f"{k}") )
                     else:
                         row.append("")
                 table.add_row(*[t for t in row])
@@ -368,7 +367,7 @@ class sections:
             groups = self.group(tasks)
             for key in self.order(groups):
                 if key in groups:
-                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = rich.text.Text(str(key).upper(), style=f"color.{key}"), title_align = "left", expand = True))
+                    sections.append( rich.panel.Panel(self.stacker(groups[key]), title = self.rtext(str(key).upper(), f"{key}"), title_align = "left", expand = True))
             return rich.console.Group(*sections)
 
     class Horizontal(Sectioner):
@@ -387,7 +386,7 @@ class sections:
 
             row = []
             for k in keys:
-                row.append( rich.panel.Panel(self.stacker(groups[k]), title = rich.text.Text(k.upper(), style=f"color.{k}"), title_align = "left", expand = True, border_style="color.title"))
+                row.append( rich.panel.Panel(self.stacker(groups[k]), title = self.rtext(k.upper(), f"{k}"), title_align = "left", expand = True, border_style="color.title"))
 
             table.add_row(*row)
             return table
