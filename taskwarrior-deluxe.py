@@ -26,10 +26,50 @@ def error(name,msg):
 
 
 class Widget:
-    pass
+    def __init__(self, config, list_separator = ","):
+        self.config = config
+        self.list_separator = list_separator
+
+    def swatch_of(key, val, prefix = "color."):
+        if key:
+            key = prefix+key
+            value = re.sub(r"\s", "_", val)
+            keyval = f"{key}.{value}"
+            if key in self.config or keyval in self.config:
+                if   key in     self.config and keyval     in self.config:
+                    if   "on"     in self.config[key] and "on" not in self.config[keyval]:
+                        return f"{self.config[keyval]} {self.config[key]}"
+                    elif "on" not in self.config[key] and "on"     in self.config[keyval]:
+                        return f"{self.config[key]} {self.config[keyval]}"
+                    elif "on" not in self.config[key] and "on" not in self.config[keyval]:
+                        korder = self.config["rule.precedence.color"].split(self.list_separator)
+                        swatch = ""
+                        for k in korder: # FIXME reverse korder?
+                            if k in keyval:
+                                swatch += " " + self.config[keyval]
+                            if k in key:
+                                swatch += " " + self.config[key]
+                        return swatch
+                    else: # "on" in self.config[key] and in self.config[keyval]
+                        raise ValueError(f"Cannot combine `{self.config[key]}` and `{self.config[keyval]}`")
+
+                elif key in     self.config and keyval not in self.config:
+                    return self.config[key]
+                elif key not in self.config and keyval     in self.config:
+                    return self.config[keyval]
+            else: # key and keyval not in self.config.
+                return ""
+        else: # Not key.
+            return ""
+
+
+    def rtext(val, key, prefix = "color."):
+        return rich.text.Text(val, style=swatch_of(key, val, prefix))
+
 
 class Tasker(Widget):
-    def __init__(self, show_only, order = None, group = None, touched = []):
+    def __init__(self, config, show_only, order = None, group = None, touched = []):
+        super().__init__(config)
         self.show_only = show_only
         self.touched = touched
         self.sorter = order
@@ -39,7 +79,8 @@ class Tasker(Widget):
         raise NotImplementedError
 
 class Stacker(Widget):
-    def __init__(self, tasker, sorter = None):
+    def __init__(self, config, tasker, sorter = None):
+        super().__init__(config)
         self.tasker = tasker
         if sorter:
             self.sorter = sorter
@@ -59,7 +100,8 @@ class StackSorter:
 
 
 class Sectioner(Widget):
-    def __init__(self, stacker, order, group):
+    def __init__(self, config, stacker, order, group):
+        super().__init__(config)
         self.stacker = stacker
         self.sorter = order
         self.grouper = group
@@ -82,10 +124,10 @@ class Sectioner(Widget):
 
 class task:
     class Card(Tasker):
-        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icons = "+"):
-            super().__init__(show_only, order, group = None, touched = touched)
+        def __init__(self, config, show_only, order = None, touched = [], wrap_width = 25):
+            super().__init__(config, show_only, order, group = None, touched = touched)
             self.wrap_width = wrap_width
-            self.tag_icons = tag_icons
+            self.tag_icons = [ self.config["icon.tag.before"], self.config["icon.tag.after"] ]
 
         def _make(self, task):
             if not self.show_only:
@@ -153,9 +195,9 @@ class task:
             return panel
 
     class Sheet(Card):
-        def __init__(self, show_only, order = None, touched = [], wrap_width = 25, tag_icons = "🏷  ", title_ends=["\n",""]):
-            super().__init__(show_only, order, touched = touched, wrap_width = wrap_width, tag_icons = tag_icons)
-            self.title_ends = title_ends
+        def __init__(self, config, show_only, order = None, touched = [], wrap_width = 25):
+            super().__init__(config, show_only, order, touched = touched, wrap_width = wrap_width)
+            self.title_ends = [ self.config["icon.short.before"], self.config["icon.short.after"] ]
 
         def __call__(self, task):
             title, body = self._make(task)
@@ -175,8 +217,8 @@ class task:
 
 
     class Raw(Tasker):
-        def __init__(self, show_only, order = None, touched = []):
-            super().__init__(show_only, order, group = None, touched = touched)
+        def __init__(self, config, show_only, order = None, touched = []):
+            super().__init__(config, show_only, order, group = None, touched = touched)
 
         def __call__(self, task):
             if not self.show_only:
@@ -227,9 +269,9 @@ class stack:
                 return sorted(tasks, key = p_value, reverse = self.reverse)
 
     class RawTable(Stacker):
-        def __init__(self, tasker, sorter = None, tag_icons = ["+",""]):
-            super().__init__(tasker, sorter = sorter)
-            self.tag_icons = tag_icons
+        def __init__(self, config, tasker, sorter = None):
+            super().__init__(config, tasker, sorter = sorter)
+            self.tag_icons = [ self.config["icon.tag.before"], self.config["icon.tag.after"] ]
 
         def __call__(self, tasks):
             keys = self.tasker.show_only
@@ -253,6 +295,7 @@ class stack:
                         if type(val) == str:
                             # Description is a special case.
                             if k == "description" and ":" in val:
+                                # Split description in "short: long".
                                 short, desc = val.split(":")
                                 # FIXME groups add a newline or hide what follows, no option to avoid it.
                                 # row.append( rich.console.Group(
@@ -294,8 +337,8 @@ class stack:
 
 
     class Vertical(Stacker):
-        def __init__(self, tasker, sorter = None):
-            super().__init__(tasker, sorter = sorter)
+        def __init__(self, config, tasker, sorter = None):
+            super().__init__(config, tasker, sorter = sorter)
 
         def __call__(self, tasks):
             stack = rich.table.Table(box = None, show_header = False, show_lines = False, expand = True)
@@ -305,8 +348,8 @@ class stack:
             return stack
 
     class Flat(Stacker):
-        def __init__(self, tasker, sorter = None):
-            super().__init__(tasker, sorter = sorter)
+        def __init__(self, config, tasker, sorter = None):
+            super().__init__(config, tasker, sorter = sorter)
 
         def __call__(self, tasks):
             stack = []
@@ -317,8 +360,8 @@ class stack:
 
 class sections:
     class Vertical(Sectioner):
-        def __init__(self, stacker, order, group):
-            super().__init__(stacker, order, group)
+        def __init__(self, config, stacker, order, group):
+            super().__init__(config, stacker, order, group)
 
         def __call__(self, tasks):
             sections = []
@@ -329,8 +372,8 @@ class sections:
             return rich.console.Group(*sections)
 
     class Horizontal(Sectioner):
-        def __init__(self, stacker, order, group):
-            super().__init__(stacker, order, group)
+        def __init__(self, config, stacker, order, group):
+            super().__init__(config, stacker, order, group)
 
         def __call__(self, tasks):
             sections = []
@@ -448,133 +491,33 @@ def parse_touched(out):
     return re.findall("(?:Modifying|Created|Starting|Stopping)+ task ([0-9]+)", out)
 
 
-def get_swatches(name = None):
-    swatches = {
-
-        "none": {
-            "color.touched": "",
-            "color.id": "",
-            "color.title": "",
-            "color.description": "",
-            "color.description.short": "",
-            "color.description.short.ends": "",
-            "color.description.long": "",
-            "color.entry": "",
-            "color.end": "",
-            "color.modified": "",
-            "color.started": "",
-            "color.status": "",
-            "color.uuid": "",
-            "color.tags": "",
-            "color.tags.ends": "",
-            "color.urgency": "",
-            "color.row.odd": "",
-            "color.row.even" : "",
-            "color.priority": "",
-        },
-
-        "nojhan": {
-            "color.touched": "#4E9A06",
-            "color.id": "color(214)",
-            "color.title": "",
-            "color.description": "color(231)",
-            "color.description.short": "color(231)",
-            "color.description.short.ends": "",
-            "color.description.long": "default",
-            "color.entry": "",
-            "color.end": "",
-            "color.modified": "color(240)",
-            "color.started": "",
-            "color.status": "bold italic white",
-            "color.uuid": "",
-            "color.tags": "color(33)",
-            "color.tags.ends": "color(26)",
-            "color.urgency": "color(219)",
-            "color.row.odd": "on #262121",
-            "color.row.even" : "on #2d2929",
-            "color.priority": "color(105)",
-        },
-
-        "chalky": {
-            "color.touched": "color(0) on color(15)",
-            "color.id": "bold color(160) on white",
-            "color.title": "",
-            "color.description": "black on white",
-            "color.description.short": "bold black on white",
-            "color.description.short.ends": "white",
-            "color.description.long": "black on white",
-            "color.entry": "",
-            "color.end": "",
-            "color.modified": "color(240)",
-            "color.started": "",
-            "color.status": "bold italic white",
-            "color.uuid": "",
-            "color.tags": "color(166) on white",
-            "color.tags.ends": "white",
-            "color.urgency": "color(219)",
-            "color.row.odd": "",
-            "color.row.even" : "",
-            "color.priority": "",
-        },
-
-        "carbon": {
-            "color.touched": "color(15) on color(0)",
-            "color.id": "bold color(196) on color(236)",
-            "color.title": "",
-            "color.description": "white on color(236)",
-            "color.description.short": "bold white on color(236)",
-            "color.description.short.ends": "color(236)",
-            "color.description.long": "white on color(236)",
-            "color.entry": "",
-            "color.end": "",
-            "color.modified": "",
-            "color.started": "",
-            "color.status": "bold italic white",
-            "color.uuid": "",
-            "color.tags": "bold black on color(88)",
-            "color.tags.ends": "color(88)",
-            "color.urgency": "color(219)",
-            "color.row.odd": "",
-            "color.row.even" : "",
-            "color.priority": "",
-        },
-
+def get_swatch(config):
+    swatch = {
+        "color.touched" : "",
+        "color.id" : "",
+        "color.title" : "",
+        "color.description" : "",
+        "color.description.short" : "",
+        "color.description.short.ends" : "",
+        "color.description.long" : "",
+        "color.entry" : "",
+        "color.end" : "",
+        "color.modified" : "",
+        "color.started" : "",
+        "color.status" : "",
+        "color.uuid" : "",
+        "color.tags" : "",
+        "color.tags.ends" : "",
+        "color.urgency" : "",
+        "color.row.odd" : "",
+        "color.row.even" : "",
+        "color.priority" : "",
     }
-    if name:
-        return swatches[name]
-    else:
-        return swatches
+    for k in config:
+        if k in swatch:
+            swatch[k] = config[k]
+    return swatch
 
-
-def get_icons(name=None):
-
-    icons = {
-
-        "none" : {
-            "tag": ["", ""],
-            "short": ["", ""],
-        },
-
-        "ascii" : {
-            "tag": ["+", ""],
-            "short": ["", ""],
-        },
-
-        "emojis" : {
-            "tag": ["🏷️ ", ""],
-            "short": ["\n", " "],
-        },
-
-        "power" : {
-            "tag": ["", ""],
-            "short": ["\n", " "],
-        },
-
-    }
-    if name:
-        return icons[name]
-    else:
-        return icons
 
 def get_layouts(kind = None, name = None):
     # FIXME use introspection to extract that automatically.
@@ -607,15 +550,29 @@ def get_layouts(kind = None, name = None):
 def tw_to_rich(color):
     # color123 -> color(123)
     color = re.sub(r"color([0-9]{0,3})", r"color(\1)", color)
-    # rgb123 -> #123 and rgb123abc -> #123abc
-    color = re.sub(r"rgb(([\da-f]{3}){1,2})", r"#\1", color)
-    # rgb123 -> rgb112233
-    color = re.sub(r"#([\da-f])([\da-f])([\da-f])", r"#\1\1\2\2\3\3", color)
+
+    # rgb123abc -> #123abc (not TW but allowed in TWD)
+    color = re.sub(r"rgb([\da-f]{6})", r"#\1", color)
+
+    # rgb123 -> #336699
+    # Mapping from TW's own 256 colors to true 16M color space.
+    # TW use a triplet of integers in [0-5] to give a more user-friendly
+    # way to pick an ANSI color in the 256-colors space.
+    # Rich allows true color, so we can just map each RGB component
+    # of TW to its hex equivalent in the classical 16M-colors space.
+    for col5 in re.finditer(r"rgb[0-5]{3}", color):
+        col256 = "#"
+        for c5 in re.finditerl(r"[0-5]", col5):
+            i5 = int(c5)
+            i256 = round(i5/5*256)
+            c256 = hex(i256).replace("0x","")
+            col256 += c256
+        color.replace(col5, col256)
+
     return color
 
 # We cannot use tomllib because strings are not quoted.
 # We cannot use configparser because there is no section and because of the "include" command.
-# FIXME handle possible values when possible.
 def parse_config(filename, current):
     config = current
     with open(filename, "r") as fd:
@@ -632,7 +589,8 @@ def parse_config(filename, current):
                     config[key.strip()] = value.strip()
                 elif "include" in line:
                     _,path = line.split()
-                    config["includes"].append(path.strip())
+                    # Recursively add/replace with the included config.
+                    config.update( parse_config(os.path.expanduser(path.strip()), config) )
                 else:
                     print(f"Cannot parse line {i} of config file `{filename}`, I'll ignore it.")
     return config
@@ -731,8 +689,6 @@ if __name__ == "__main__":
         "layout.sections": "Horizontal",
         "layout.sections.group": "status",
         "layout.sections.group.show": "",
-        "design.swatch": "none",
-        "design.icons": "none",
         "widget.card.wrap": "25",
         "list.filtered": "false",
     }
@@ -781,17 +737,16 @@ if __name__ == "__main__":
     else:
         show_only = showed
 
-    swatch = rich.theme.Theme(get_swatches(config["design.swatch"]))
+    swatch = rich.theme.Theme(get_swatch(config))
     layouts = get_layouts()
 
     ##### Tasks #####
     if config["layout.task"] == "Card":
-        tasker = layouts["task"]["Card"](show_only, touched = touched, wrap_width = int(config["widget.card.wrap"]), tag_icons = get_icons(config["design.icons"])["tag"])
+        tasker = layouts["task"]["Card"](config, show_only, touched = touched, wrap_width = int(config["widget.card.wrap"]))
     elif config["layout.task"] == "Sheet":
-        icons = get_icons(config["design.icons"])
-        tasker = layouts["task"]["Sheet"](show_only, touched = touched, wrap_width = int(config["widget.card.wrap"]), tag_icons = icons["tag"], title_ends = icons["short"])
+        tasker = layouts["task"]["Sheet"](config, show_only, touched = touched, wrap_width = int(config["widget.card.wrap"]))
     else:
-        tasker = layouts["task"][config["layout.task"]](show_only, touched = touched)
+        tasker = layouts["task"][config["layout.task"]](config, show_only, touched = touched)
 
     ##### Stack #####
     if config["layout.stack.sort"]:
@@ -805,9 +760,9 @@ if __name__ == "__main__":
         sorter = None
 
     if config["layout.stack"] == "RawTable":
-        stacker = layouts["stack"]["RawTable"](tasker, sorter = sorter, tag_icons = get_icons(config["design.icons"])["tag"])
+        stacker = layouts["stack"]["RawTable"](config, tasker, sorter = sorter)
     else:
-        stacker = layouts["stack"][config["layout.stack"]](tasker, sorter = sorter)
+        stacker = layouts["stack"][config["layout.stack"]](config, tasker, sorter = sorter)
 
     ##### Sections #####
     if config["layout.sections.group"]:
@@ -854,10 +809,10 @@ if __name__ == "__main__":
         g_subsort_on = None
 
     if config["layout.subsections"] and config["layout.subsections.group"]:
-        subsectioner = layouts["sections"][config["layout.subsections"]](stacker, g_subsort_on, subgroup_by)
-        sectioner = layouts["sections"][config["layout.sections"]](subsectioner, g_sort_on, group_by)
+        subsectioner = layouts["sections"][config["layout.subsections"]](config, stacker, g_subsort_on, subgroup_by)
+        sectioner = layouts["sections"][config["layout.sections"]](config, subsectioner, g_sort_on, group_by)
     else:
-        sectioner = layouts["sections"][config["layout.sections"]](stacker, g_sort_on, group_by)
+        sectioner = layouts["sections"][config["layout.sections"]](config, stacker, g_sort_on, group_by)
 
     console = Console(theme = swatch)
     # console.rule("taskwarrior-deluxe")
