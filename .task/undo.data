@@ -292,3 +292,18 @@ time 1692954719
 old [description:"hide old done tasks: Hide tasks with last status that haven t been touched since a long time." entry:"1691773751" modified:"1692954709" priority:"M" status:"pending" tags:"feat,wontfix" tags_feat:"x" tags_wontfix:"x" uuid:"e18707b4-304d-41f3-8504-89476cd796f5"]
 new [description:"hide old done tasks: Hide tasks with last status that haven t been touched since a long time." end:"1692954719" entry:"1691773751" modified:"1692954719" priority:"M" status:"completed" tags:"feat,wontfix" tags_feat:"x" tags_wontfix:"x" uuid:"e18707b4-304d-41f3-8504-89476cd796f5"]
 ---
+time 1693322866
+new [description:"hide grouped fields: when &open;sub&close;grouping, hide the grouped field from the task display" entry:"1693322866" modified:"1693322866" status:"pending" tags:"feat" tags_feat:"x" uuid:"ec74a19f-8ab3-4911-b8d8-3b79a593a5d3"]
+---
+time 1693322881
+old [description:"hide grouped fields: when &open;sub&close;grouping, hide the grouped field from the task display" entry:"1693322866" modified:"1693322866" status:"pending" tags:"feat" tags_feat:"x" uuid:"ec74a19f-8ab3-4911-b8d8-3b79a593a5d3"]
+new [description:"hide grouped fields: when &open;sub&close;grouping, hide the grouped field from the task display" entry:"1693322866" modified:"1693322881" priority:"M" status:"pending" tags:"feat" tags_feat:"x" uuid:"ec74a19f-8ab3-4911-b8d8-3b79a593a5d3"]
+---
+time 1693322886
+old [description:"hide grouped fields: when &open;sub&close;grouping, hide the grouped field from the task display" entry:"1693322866" modified:"1693322881" priority:"M" status:"pending" tags:"feat" tags_feat:"x" uuid:"ec74a19f-8ab3-4911-b8d8-3b79a593a5d3"]
+new [description:"hide grouped fields: when &open;sub&close;grouping, hide the grouped field from the task display" entry:"1693322866" modified:"1693322886" priority:"M" start:"1693322886" status:"pending" tags:"feat" tags_feat:"x" uuid:"ec74a19f-8ab3-4911-b8d8-3b79a593a5d3"]
+---
+time 1693323123
+old [description:"hide grouped fields: when &open;sub&close;grouping, hide the grouped field from the task display" entry:"1693322866" modified:"1693322886" priority:"M" start:"1693322886" status:"pending" tags:"feat" tags_feat:"x" uuid:"ec74a19f-8ab3-4911-b8d8-3b79a593a5d3"]
+new [description:"hide grouped fields: when &open;sub&close;grouping, hide the grouped field from the task display" end:"1693323123" entry:"1693322866" modified:"1693323123" priority:"M" status:"completed" tags:"feat" tags_feat:"x" uuid:"ec74a19f-8ab3-4911-b8d8-3b79a593a5d3"]
+---

@@ -745,6 +745,14 @@ if __name__ == "__main__":
         show_only = None
     else:
         show_only = showed
+        field = config["layout.sections.group"]
+        if field and field in show_only:
+            # Remove the grouped field from the showed ones,
+            # as it will be displayed by panels anyway.
+            show_only.pop(show_only.index(field))
+        field = config["layout.subsections.group"]
+        if field and field in show_only:
+            show_only.pop(show_only.index(field))
 
     swatch = rich.theme.Theme(get_swatch(config))
     layouts = get_layouts()
