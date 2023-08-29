@@ -307,3 +307,17 @@ time 1693323123
 old [description:"hide grouped fields: when &open;sub&close;grouping, hide the grouped field from the task display" entry:"1693322866" modified:"1693322886" priority:"M" start:"1693322886" status:"pending" tags:"feat" tags_feat:"x" uuid:"ec74a19f-8ab3-4911-b8d8-3b79a593a5d3"]
 new [description:"hide grouped fields: when &open;sub&close;grouping, hide the grouped field from the task display" end:"1693323123" entry:"1693322866" modified:"1693323123" priority:"M" status:"completed" tags:"feat" tags_feat:"x" uuid:"ec74a19f-8ab3-4911-b8d8-3b79a593a5d3"]
 ---
+time 1693323512
+new [description:"hashed color: add a hash&open;color1,rgb123,...&close; color tag allowing to randomly pick a stable color for items like tags" entry:"1693323512" modified:"1693323512" status:"pending" tags:"feat" tags_feat:"x" uuid:"22082221-a02a-4f85-901e-135a99c396c3"]
+---
+time 1693323524
+old [description:"hashed color: add a hash&open;color1,rgb123,...&close; color tag allowing to randomly pick a stable color for items like tags" entry:"1693323512" modified:"1693323512" status:"pending" tags:"feat" tags_feat:"x" uuid:"22082221-a02a-4f85-901e-135a99c396c3"]
+new [description:"hashed color: add a hash&open;color1,rgb123,...&close; color tag allowing to randomly pick a stable color for items like tags" entry:"1693323512" modified:"1693323524" priority:"M" status:"pending" tags:"feat" tags_feat:"x" uuid:"22082221-a02a-4f85-901e-135a99c396c3"]
+---
+time 1693323578
+new [description:"systematic icons: add a systematic way to insert icons after\/before any field" entry:"1693323578" modified:"1693323578" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"be1a6eb3-3406-44d1-957a-e952c0d69f2a"]
+---
+time 1693324188
+old [description:"theme config: use taskwarrior theme config and extends from there." entry:"1692471868" modified:"1692600275" priority:"H" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"6b248843-1b11-487b-85e8-a96e668f6772"]
+new [description:"theme config: use taskwarrior theme config and extends from there." end:"1693324188" entry:"1692471868" modified:"1693324188" priority:"H" status:"completed" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"6b248843-1b11-487b-85e8-a96e668f6772"]
+---
