@@ -1,4 +1,6 @@
 
+list.filtered=no
+
 layout.subsections = Vertical
 layout.subsections.group = priority
 layout.sections.group.show = H,M,L,

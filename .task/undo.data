@@ -321,3 +321,29 @@ time 1693324188
 old [description:"theme config: use taskwarrior theme config and extends from there." entry:"1692471868" modified:"1692600275" priority:"H" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"6b248843-1b11-487b-85e8-a96e668f6772"]
 new [description:"theme config: use taskwarrior theme config and extends from there." end:"1693324188" entry:"1692471868" modified:"1693324188" priority:"H" status:"completed" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"6b248843-1b11-487b-85e8-a96e668f6772"]
 ---
+time 1693395512
+new [description:"date pretty print: pretty print date fields" entry:"1693395511" modified:"1693395511" priority:"L" status:"pending" tags:"feat" tags_feat:"x" uuid:"85c7d0dc-4651-4f23-a2ec-9db62937cffd"]
+---
+time 1693423829
+new [description:"up\/down dirs: display summary of databases further up or down the current one. p:H" entry:"1693423829" modified:"1693423829" status:"pending" tags:"feat" tags_feat:"x" uuid:"fc270e5d-23fd-4824-ad9d-061d624272d9"]
+---
+time 1693423835
+new [description:"up\/down dirs: display summary of databases further up or down the current one." entry:"1693423835" modified:"1693423835" priority:"H" status:"pending" tags:"feat" tags_feat:"x" uuid:"03998ee8-9917-49cf-a6cb-3fdd14a7deb3"]
+---
+time 1693423844
+new [description:"up\/down dirs: display summary of databases further up or down the current one." entry:"1693423844" modified:"1693423844" status:"pending" tags:"feat" tags_feat:"x" uuid:"1372c26f-b4e3-45b5-80ca-6d052af8f28e"]
+---
+time 1693423854
+new [description:"up down dirs: display summary of databases further up or down the current one." entry:"1693423854" modified:"1693423854" status:"pending" tags:"feat" tags_feat:"x" uuid:"16684e35-9eb4-452d-aa68-84ef57309e00"]
+---
+time 1693472975
+new [description:"touch filtered: point out tasks matching a non-editing filtered command" entry:"1693472975" modified:"1693472975" status:"pending" tags:"feat" tags_feat:"x" uuid:"c5835e89-fd7d-45bf-82ed-b38cd0d56b43"]
+---
+time 1693472982
+old [description:"touch filtered: point out tasks matching a non-editing filtered command" entry:"1693472975" modified:"1693472975" status:"pending" tags:"feat" tags_feat:"x" uuid:"c5835e89-fd7d-45bf-82ed-b38cd0d56b43"]
+new [description:"touch filtered: point out tasks matching a non-editing filtered command" entry:"1693472975" modified:"1693472982" start:"1693472982" status:"pending" tags:"feat" tags_feat:"x" uuid:"c5835e89-fd7d-45bf-82ed-b38cd0d56b43"]
+---
+time 1693473273
+old [description:"touch filtered: point out tasks matching a non-editing filtered command" entry:"1693472975" modified:"1693472982" start:"1693472982" status:"pending" tags:"feat" tags_feat:"x" uuid:"c5835e89-fd7d-45bf-82ed-b38cd0d56b43"]
+new [description:"touch filtered: point out tasks matching a non-editing filtered command" end:"1693473273" entry:"1693472975" modified:"1693473273" status:"completed" tags:"feat" tags_feat:"x" uuid:"c5835e89-fd7d-45bf-82ed-b38cd0d56b43"]
+---

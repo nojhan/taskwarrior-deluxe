@@ -299,7 +299,8 @@ class stack:
                             # Description is a special case.
                             if k == "description" and ":" in val:
                                 # Split description in "short: long".
-                                short, desc = val.split(":")
+                                vals = val.split(":")
+                                short, desc = vals[0], ":".join(vals[1:])
                                 # FIXME groups add a newline or hide what follows, no option to avoid it.
                                 # row.append( rich.console.Group(
                                 #     rich.text.Text(short+":", style="color.description.short", end="\n"),
@@ -467,6 +468,7 @@ def call_taskwarrior(args:list[str] = ["export"], taskfile = ".task") -> str:
     env["TASKDATA"] = taskfile
 
     cmd = ["task"] + args
+    # print(cmd)
     try:
         p = subprocess.Popen( " ".join(cmd),
             stdout=subprocess.PIPE,
@@ -727,6 +729,7 @@ if __name__ == "__main__":
 
     # First pass arguments to taskwarrior and let it do its magic.
     out = call_taskwarrior(cmd, taskfile)
+    touched = []
     if "Description" not in out:
         print(out.strip())
     touched = parse_touched(out)
@@ -737,6 +740,14 @@ if __name__ == "__main__":
         jdata = get_data(taskfile, filter)
     else:
         jdata = get_data(taskfile, filter = None)
+        # If no explicit touch from an editing command,
+        # then just point out tasks matching the filter.
+        if not touched:
+            filter = parse_filter(cmd)
+            filtered = get_data(taskfile, filter)
+            if len(filtered) != len(jdata):
+                touched = [str(t["id"]) for t in filtered]
+
     # print(json.dumps(jdata, indent=4))
 
     list_separator = ","
