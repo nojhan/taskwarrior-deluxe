@@ -347,3 +347,14 @@ time 1693473273
 old [description:"touch filtered: point out tasks matching a non-editing filtered command" entry:"1693472975" modified:"1693472982" start:"1693472982" status:"pending" tags:"feat" tags_feat:"x" uuid:"c5835e89-fd7d-45bf-82ed-b38cd0d56b43"]
 new [description:"touch filtered: point out tasks matching a non-editing filtered command" end:"1693473273" entry:"1693472975" modified:"1693473273" status:"completed" tags:"feat" tags_feat:"x" uuid:"c5835e89-fd7d-45bf-82ed-b38cd0d56b43"]
 ---
+time 1693473644
+new [description:"humanize dates: make dates readable to a human being" entry:"1693473644" modified:"1693473644" status:"pending" tags:"feat" tags_feat:"x" uuid:"ea4fd6c8-f7d0-4b85-af26-feeb2b196f29"]
+---
+time 1693473656
+old [description:"humanize dates: make dates readable to a human being" entry:"1693473644" modified:"1693473644" status:"pending" tags:"feat" tags_feat:"x" uuid:"ea4fd6c8-f7d0-4b85-af26-feeb2b196f29"]
+new [description:"humanize dates: make dates readable to a human being" entry:"1693473644" modified:"1693473656" start:"1693473656" status:"pending" tags:"feat" tags_feat:"x" uuid:"ea4fd6c8-f7d0-4b85-af26-feeb2b196f29"]
+---
+time 1693475165
+old [description:"humanize dates: make dates readable to a human being" entry:"1693473644" modified:"1693473656" start:"1693473656" status:"pending" tags:"feat" tags_feat:"x" uuid:"ea4fd6c8-f7d0-4b85-af26-feeb2b196f29"]
+new [description:"humanize dates: make dates readable to a human being" end:"1693475165" entry:"1693473644" modified:"1693475165" status:"completed" tags:"feat" tags_feat:"x" uuid:"ea4fd6c8-f7d0-4b85-af26-feeb2b196f29"]
+---

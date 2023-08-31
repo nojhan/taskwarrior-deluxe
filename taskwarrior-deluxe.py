@@ -7,6 +7,8 @@ import json
 import queue
 import pathlib
 import textwrap
+import datetime
+import humanize
 import subprocess
 
 import rich
@@ -68,6 +70,11 @@ class Widget:
 
     def rtext(self, val, swatch, prefix = "color.", end="\n"):
         return rich.text.Text(val, style=self.swatch_of(swatch, val, prefix), end=end)
+
+    def rdate(self, date, swatch, prefix = "color.", end="\n"):
+        dt = datetime.datetime.strptime(date, "%Y%m%dT%H%M%SZ")
+        hd = humanize.naturaltime(datetime.datetime.now() - dt)
+        return self.rtext(hd, swatch, prefix, end)
 
 
 class Tasker(Widget):
@@ -157,7 +164,10 @@ class task:
                     val = task[key]
                     segment = f"{key}: "
                     if type(val) == str:
-                        segments.append( self.rtext(segment+val, f"{key}") )
+                        if key in [ "due", "end", "entry", "modified", "scheduled", "start", "until", "wait"]:
+                            segments.append( self.rtext(segment, key) + self.rdate(val, key) )
+                        else:
+                            segments.append( self.rtext(segment+val, key) )
                     elif type(val) == list:
                         # FIXME Columns does not fit.
                         # g = Columns([f"+{t}" for t in val], expand = False)
@@ -165,14 +175,14 @@ class task:
                         for t in val:
                            lst.append( \
                                self.rtext(self.tag_icons[0], "tags.ends") + \
-                               self.rtext(t, f"{key}") + \
+                               self.rtext(t, key) + \
                                self.rtext(self.tag_icons[1], "tags.ends") \
                            )
                         g = rich.console.Group(*lst, fit = True)
                         # g = rich.console.Group(*[rich.text.Text(f"{self.tag_icons[0]}{t}{self.tag_icons[1]}", style=f"color.{key}") for t in val], fit = True)
                         segments.append(g)
                     else:
-                        segments.append(self.rtext(segment+str(val), f"{key}"))
+                        segments.append(self.rtext(segment+str(val), key))
 
             # FIXME Columns does not fit.
             # cols = Columns(segments)
@@ -312,9 +322,12 @@ class stack:
                                             rich.text.Text(":", style="default", end="") + \
                                             self.rtext(desc, "description.long", end="") )
 
+                            elif k in [ "due", "end", "entry", "modified", "scheduled", "start", "until", "wait"]:
+                                row.append( self.rdate(val, k) )
+
                             # Strings, but not description.
                             else:
-                                row.append( self.rtext(val, f"{k}") )
+                                row.append( self.rtext(val, k) )
                         ##### List keys. #####
                         elif type(val) == list:
                             # Tags are a special case.
@@ -324,16 +337,16 @@ class stack:
                                     # FIXME use Columns if/when it does not expand.
                                     tags += \
                                         self.rtext(self.tag_icons[0], "tags.ends") + \
-                                        self.rtext(t, f"{k}") + \
+                                        self.rtext(t, k) + \
                                         self.rtext(self.tag_icons[1], "tags.ends") + \
                                         " "
                                 row.append( tags )
                             # List, but not tags.
                             else:
-                                row.append( self.rtext(" ".join(val), f"{k}") )
+                                row.append( self.rtext(" ".join(val), k) )
                         ##### Other type of keys. #####
                         else:
-                            row.append( self.rtext(str(val), f"{k}") )
+                            row.append( self.rtext(str(val), k) )
                     else:
                         row.append("")
                 table.add_row(*[t for t in row])
@@ -375,7 +388,7 @@ class sections:
                     if self.grouper.field:
                         swatch = f"{self.grouper.field}.{key}"
                     else:
-                        swatch = f"{key}"
+                        swatch = key
                     val = str(key).upper()
                     sections.append( rich.panel.Panel(self.stacker(groups[key]), title = self.rtext(val, swatch), title_align = "left", expand = True, border_style = self.swatch_of(swatch, val)))
             return rich.console.Group(*sections)
@@ -396,7 +409,7 @@ class sections:
 
             row = []
             for k in keys:
-                row.append( rich.panel.Panel(self.stacker(groups[k]), title = self.rtext(k.upper(), f"{k}"), title_align = "left", expand = True, border_style="color.title"))
+                row.append( rich.panel.Panel(self.stacker(groups[k]), title = self.rtext(k.upper(), k), title_align = "left", expand = True, border_style="color.title"))
 
             table.add_row(*row)
             return table
