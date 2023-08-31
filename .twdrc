@@ -9,5 +9,7 @@ layout.sections = Horizontal
 layout.sections.group = status
 layout.sections.group.show = pending,started
 
+layout.stack.sort=urgency
+
 include ~/code/taskwarrior-deluxe/presets/colors_nojhan.conf
 include ~/code/taskwarrior-deluxe/presets/icons_ascii.conf

@@ -794,7 +794,8 @@ if __name__ == "__main__":
         if config["layout.stack.sort"] == "priority":
             sorter = stack.sort.Priority(as_bool(config["layout.stack.sort.reverse"]))
         elif config["layout.stack.sort"] == "urgency":
-            sorter = stack.sort.Priority(as_bool(config["layout.stack.sort.reverse"]))
+            # Natural sort is from high to low values.
+            sorter = stack.sort.Field(config["layout.stack.sort"], not as_bool(config["layout.stack.sort.reverse"]))
         else:
             sorter = stack.sort.Field(config["layout.stack.sort"], reverse = as_bool(config["layout.stack.sort.reverse"]))
     else:
