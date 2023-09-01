@@ -399,3 +399,11 @@ time 1693562336
 old [description:"test" entry:"1693562332" modified:"1693562332" status:"pending" uuid:"4ecaeb6a-372e-425f-8a12-9a2ec3d70755"]
 new [description:"test" end:"1693562336" entry:"1693562332" modified:"1693562336" status:"completed" uuid:"4ecaeb6a-372e-425f-8a12-9a2ec3d70755"]
 ---
+time 1693562982
+old [description:"systematic icons: add a systematic way to insert icons after\/before any field" entry:"1693323578" modified:"1693323578" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"be1a6eb3-3406-44d1-957a-e952c0d69f2a"]
+new [description:"systematic icons: add a systematic way to insert icons after\/before any field" entry:"1693323578" modified:"1693562982" priority:"H" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"be1a6eb3-3406-44d1-957a-e952c0d69f2a"]
+---
+time 1693563000
+old [description:"visual deps: find an efficient way to show dependencies" entry:"1693510207" modified:"1693510207" status:"pending" tags:"design,feat" tags_design:"x" tags_feat:"x" uuid:"b3bd2bc3-3857-42b9-8168-5e21bcddbec5"]
+new [description:"visual deps: find an efficient way to show dependencies" entry:"1693510207" modified:"1693563000" priority:"M" status:"pending" tags:"design,feat" tags_design:"x" tags_feat:"x" uuid:"b3bd2bc3-3857-42b9-8168-5e21bcddbec5"]
+---

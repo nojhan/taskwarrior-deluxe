@@ -309,7 +309,7 @@ class stack:
             for task in self.sorter(tasks):
                 taskers = self.tasker(task)
                 if str(task["id"]) in self.tasker.touched:
-                    row = [self.rtext("▶", "r.touched")]
+                    row = [self.rtext("▶", "touched")]
                 else:
                     row = [""]
 
@@ -586,6 +586,9 @@ def get_layouts(kind = None, name = None):
 
 
 def tw_to_rich(color):
+    # Rich does not like capitals.
+    color = color.lower()
+
     # color123 -> color(123)
     color = re.sub(r"color([0-9]{0,3})", r"color(\1)", color)
 
