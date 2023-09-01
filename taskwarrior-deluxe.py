@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import json
+import pytz
 import queue
 import pathlib
 import textwrap
@@ -72,8 +73,19 @@ class Widget:
         return rich.text.Text(val, style=self.swatch_of(swatch, val, prefix), end=end)
 
     def rdate(self, date, swatch, prefix = "color.", end="\n"):
+        # Get current time zone from locale.
+        ltz = str(datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo)
+        # Ugly hack to bypass a stupid pedantry of pytz.
+        fltz = ltz.replace("CEST", "Europe/Paris")
+        # Get a timezone object.
+        tz = pytz.timezone(fltz)
+        # Convert data to datetime.
         dt = datetime.datetime.strptime(date, "%Y%m%dT%H%M%SZ")
-        hd = humanize.naturaltime(datetime.datetime.now() - dt)
+        # convert datetime to locale datetime.
+        ldt = tz.localize(dt, is_dst = None)
+        lnow = tz.localize(datetime.datetime.now(), is_dst = None)
+        # Convert delta to human readable.
+        hd = humanize.naturaltime(lnow - ldt)
         return self.rtext(hd, swatch, prefix, end)
 
 

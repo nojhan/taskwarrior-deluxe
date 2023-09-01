@@ -358,3 +358,33 @@ time 1693475165
 old [description:"humanize dates: make dates readable to a human being" entry:"1693473644" modified:"1693473656" start:"1693473656" status:"pending" tags:"feat" tags_feat:"x" uuid:"ea4fd6c8-f7d0-4b85-af26-feeb2b196f29"]
 new [description:"humanize dates: make dates readable to a human being" end:"1693475165" entry:"1693473644" modified:"1693475165" status:"completed" tags:"feat" tags_feat:"x" uuid:"ea4fd6c8-f7d0-4b85-af26-feeb2b196f29"]
 ---
+time 1693482187
+old [description:"up\/down dirs: display summary of databases further up or down the current one." entry:"1693423844" modified:"1693423844" status:"pending" tags:"feat" tags_feat:"x" uuid:"1372c26f-b4e3-45b5-80ca-6d052af8f28e"]
+new [description:"up\/down dirs: display summary of databases further up or down the current one." end:"1693482187" entry:"1693423844" modified:"1693482187" status:"deleted" tags:"feat" tags_feat:"x" uuid:"1372c26f-b4e3-45b5-80ca-6d052af8f28e"]
+---
+time 1693482187
+old [description:"up down dirs: display summary of databases further up or down the current one." entry:"1693423854" modified:"1693423854" status:"pending" tags:"feat" tags_feat:"x" uuid:"16684e35-9eb4-452d-aa68-84ef57309e00"]
+new [description:"up down dirs: display summary of databases further up or down the current one." end:"1693482187" entry:"1693423854" modified:"1693482187" status:"deleted" tags:"feat" tags_feat:"x" uuid:"16684e35-9eb4-452d-aa68-84ef57309e00"]
+---
+time 1693482204
+old [description:"up\/down dirs: display summary of databases further up or down the current one. p:H" entry:"1693423829" modified:"1693423829" status:"pending" tags:"feat" tags_feat:"x" uuid:"fc270e5d-23fd-4824-ad9d-061d624272d9"]
+new [description:"up\/down dirs: display summary of databases further up or down the current one. p:H" end:"1693482204" entry:"1693423829" modified:"1693482204" status:"deleted" tags:"feat" tags_feat:"x" uuid:"fc270e5d-23fd-4824-ad9d-061d624272d9"]
+---
+time 1693507795
+new [description:"timezone: handle timezone in date conversion" entry:"1693507795" modified:"1693507795" status:"pending" tags:"bug" tags_bug:"x" uuid:"462b9cae-5fbb-4fcc-ab04-41cbd7a44546"]
+---
+time 1693510207
+new [description:"visual deps: find an efficient way to show dependencies" entry:"1693510207" modified:"1693510207" status:"pending" tags:"design,feat" tags_design:"x" tags_feat:"x" uuid:"b3bd2bc3-3857-42b9-8168-5e21bcddbec5"]
+---
+time 1693548680
+old [description:"more themes" entry:"1691864624" modified:"1692954684" priority:"L" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+new [dep_1a5aab4a-0c2b-444f-9259-6eddc29b9791:"x" depends:"1a5aab4a-0c2b-444f-9259-6eddc29b9791" description:"more themes" entry:"1691864624" modified:"1693548680" priority:"L" status:"pending" tags:"themes" tags_themes:"x" uuid:"9ee183d4-3413-4efa-ba68-10d709669c05"]
+---
+time 1693548747
+old [description:"date pretty print: pretty print date fields" entry:"1693395511" modified:"1693395511" priority:"L" status:"pending" tags:"feat" tags_feat:"x" uuid:"85c7d0dc-4651-4f23-a2ec-9db62937cffd"]
+new [description:"date pretty print: pretty print date fields" end:"1693548747" entry:"1693395511" modified:"1693548747" priority:"L" status:"completed" tags:"feat" tags_feat:"x" uuid:"85c7d0dc-4651-4f23-a2ec-9db62937cffd"]
+---
+time 1693549411
+old [description:"timezone: handle timezone in date conversion" entry:"1693507795" modified:"1693507795" status:"pending" tags:"bug" tags_bug:"x" uuid:"462b9cae-5fbb-4fcc-ab04-41cbd7a44546"]
+new [description:"timezone: handle timezone in date conversion" end:"1693549411" entry:"1693507795" modified:"1693549411" status:"completed" tags:"bug" tags_bug:"x" uuid:"462b9cae-5fbb-4fcc-ab04-41cbd7a44546"]
+---
