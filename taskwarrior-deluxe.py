@@ -118,7 +118,7 @@ class StackSorter:
         self.reverse = reverse
 
     def __call__(self, tasks):
-       raise NotImplementedError 
+       raise NotImplementedError
 
 
 class Sectioner(Widget):
@@ -523,6 +523,9 @@ def get_data(taskfile, filter = None):
 
 
 def parse_touched(out):
+    if "Completed task" in out:
+        # For some reason, regexp below matches "Completed" as well.
+        return []
     return re.findall("(?:Modifying|Created|Starting|Stopping)+ task ([0-9]+)", out)
 
 

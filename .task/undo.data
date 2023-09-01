@@ -388,3 +388,14 @@ time 1693549411
 old [description:"timezone: handle timezone in date conversion" entry:"1693507795" modified:"1693507795" status:"pending" tags:"bug" tags_bug:"x" uuid:"462b9cae-5fbb-4fcc-ab04-41cbd7a44546"]
 new [description:"timezone: handle timezone in date conversion" end:"1693549411" entry:"1693507795" modified:"1693549411" status:"completed" tags:"bug" tags_bug:"x" uuid:"462b9cae-5fbb-4fcc-ab04-41cbd7a44546"]
 ---
+time 1693550227
+old [description:"semantic colors: allow coloring by values, not just fields." entry:"1692255328" modified:"1692953258" start:"1692953258" status:"pending" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"1a5aab4a-0c2b-444f-9259-6eddc29b9791"]
+new [description:"semantic colors: allow coloring by values, not just fields." end:"1693550227" entry:"1692255328" modified:"1693550227" status:"completed" tags:"feat,themes" tags_feat:"x" tags_themes:"x" uuid:"1a5aab4a-0c2b-444f-9259-6eddc29b9791"]
+---
+time 1693562332
+new [description:"test" entry:"1693562332" modified:"1693562332" status:"pending" uuid:"4ecaeb6a-372e-425f-8a12-9a2ec3d70755"]
+---
+time 1693562336
+old [description:"test" entry:"1693562332" modified:"1693562332" status:"pending" uuid:"4ecaeb6a-372e-425f-8a12-9a2ec3d70755"]
+new [description:"test" end:"1693562336" entry:"1693562332" modified:"1693562336" status:"completed" uuid:"4ecaeb6a-372e-425f-8a12-9a2ec3d70755"]
+---

@@ -105,3 +105,6 @@
 {"description":"more themes","entry":"20230812T182344Z","modified":"20230901T061120Z","priority":"L","status":"pending","uuid":"9ee183d4-3413-4efa-ba68-10d709669c05","tags":["themes"],"depends":["1a5aab4a-0c2b-444f-9259-6eddc29b9791"]}
 {"description":"date pretty print: pretty print date fields","end":"20230901T061227Z","entry":"20230830T113831Z","modified":"20230901T061227Z","priority":"L","status":"completed","uuid":"85c7d0dc-4651-4f23-a2ec-9db62937cffd","tags":["feat"]}
 {"description":"timezone: handle timezone in date conversion","end":"20230901T062331Z","entry":"20230831T184955Z","modified":"20230901T062331Z","status":"completed","uuid":"462b9cae-5fbb-4fcc-ab04-41cbd7a44546","tags":["bug"]}
+{"description":"semantic colors: allow coloring by values, not just fields.","end":"20230901T063707Z","entry":"20230817T065528Z","modified":"20230901T063707Z","status":"completed","uuid":"1a5aab4a-0c2b-444f-9259-6eddc29b9791","tags":["feat","themes"]}
+{"description":"test","entry":"20230901T095852Z","modified":"20230901T095852Z","status":"pending","uuid":"4ecaeb6a-372e-425f-8a12-9a2ec3d70755"}
+{"description":"test","end":"20230901T095856Z","entry":"20230901T095852Z","modified":"20230901T095856Z","status":"completed","uuid":"4ecaeb6a-372e-425f-8a12-9a2ec3d70755"}
