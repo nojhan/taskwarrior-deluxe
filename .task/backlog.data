@@ -110,3 +110,4 @@
 {"description":"test","end":"20230901T095856Z","entry":"20230901T095852Z","modified":"20230901T095856Z","status":"completed","uuid":"4ecaeb6a-372e-425f-8a12-9a2ec3d70755"}
 {"description":"systematic icons: add a systematic way to insert icons after\/before any field","entry":"20230829T153938Z","modified":"20230901T100942Z","priority":"H","status":"pending","uuid":"be1a6eb3-3406-44d1-957a-e952c0d69f2a","tags":["feat","themes"]}
 {"description":"visual deps: find an efficient way to show dependencies","entry":"20230831T193007Z","modified":"20230901T101000Z","priority":"M","status":"pending","uuid":"b3bd2bc3-3857-42b9-8168-5e21bcddbec5","tags":["design","feat"]}
+{"description":"up\/down dirs: display summary of databases further up or down the current one.","end":"20230908T142102Z","entry":"20230830T193035Z","modified":"20230908T142102Z","priority":"H","status":"completed","uuid":"03998ee8-9917-49cf-a6cb-3fdd14a7deb3","tags":["feat"]}

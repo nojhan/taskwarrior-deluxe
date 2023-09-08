@@ -889,13 +889,13 @@ if __name__ == "__main__":
         uptaskfile = find_tasks(".task", task_dir.parent, config)
         if uptaskfile:
             uprelp = pathlib.Path(os.path.relpath(task_dir.parent, cwd))
-            upreli = re.sub("\.\./*", "⮬", str(uprelp))
+            upreli = re.sub("\.\./*", "⮤", str(uprelp))
             upjdata = get_data(uptaskfile)
             console.print(w.rtext(f"{upreli} {uptaskfile.parent.name}/: ", swatch="parentdir"), end="")
             console.print(w.rtext(f"{len(upjdata)} tasks", swatch="parentdir.tasks"))
 
         # Relative path to the directory holding the task files.
-        rela = re.sub("\.\./*", "⮬", str(relp))
+        rela = re.sub("\.\./*", "⮤", str(relp))
         reli = re.sub("\.", "", rela)
         if reli:
             console.rule(w.rtext(f"{reli} {task_dir.name}", swatch="taskdir"), style=config["color.taskdir"])
@@ -911,7 +911,7 @@ if __name__ == "__main__":
             downtaskfile = find_tasks(".task", pathlib.Path(f), config)
             if downtaskfile and downtaskfile != taskfile:
                 downrelp = pathlib.Path(os.path.relpath(task_dir.parent, cwd))
-                downreli = re.sub("\.\./*", "⮯", str(downrelp))
+                downreli = re.sub("\.\./*", "⮧ ", str(downrelp))
                 downjdata = get_data(downtaskfile)
                 console.print(w.rtext(f"{downreli}./{downtaskfile.parent.name}: ", swatch="parentdir"), end="")
                 console.print(w.rtext(f"{len(downjdata)} tasks", swatch="parentdir.tasks"))
