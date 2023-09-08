@@ -875,6 +875,44 @@ if __name__ == "__main__":
         sectioner = layouts["sections"][config["layout.sections"]](config, stacker, g_sort_on, group_by)
 
     console = Console(theme = swatch)
-    # console.rule("taskwarrior-deluxe")
+
+    # Display the basename of the directory holding the database.
+    task_dir = taskfile.parent
+    cwd = pathlib.Path.cwd()
+    relp = pathlib.Path(os.path.relpath(task_dir, cwd))
+    w = Widget(config)
+    if relp == '.':
+        # Just the name of the current dir.
+        console.rule(w.rtext(str(task_dir.name), swatch="taskdir"), style=config["color.taskdir"])
+    else:
+        # Display a number of tasks in an upper directory.
+        uptaskfile = find_tasks(".task", task_dir.parent, config)
+        if uptaskfile:
+            uprelp = pathlib.Path(os.path.relpath(task_dir.parent, cwd))
+            upreli = re.sub("\.\./*", "⮬", str(uprelp))
+            upjdata = get_data(uptaskfile)
+            console.print(w.rtext(f"{upreli} {uptaskfile.parent.name}/: ", swatch="parentdir"), end="")
+            console.print(w.rtext(f"{len(upjdata)} tasks", swatch="parentdir.tasks"))
+
+        # Relative path to the directory holding the task files.
+        rela = re.sub("\.\./*", "⮬", str(relp))
+        reli = re.sub("\.", "", rela)
+        if reli:
+            console.rule(w.rtext(f"{reli} {task_dir.name}", swatch="taskdir"), style=config["color.taskdir"])
+        else:
+            console.rule(w.rtext(f"{task_dir.name}", swatch="taskdir"), style=config["color.taskdir"])
+
+    # Main display.
     console.print(sectioner(jdata))
+
+    # Number of tasks in immediate subdirs.
+    for f in os.scandir(cwd):
+        if f.is_dir():
+            downtaskfile = find_tasks(".task", pathlib.Path(f), config)
+            if downtaskfile and downtaskfile != taskfile:
+                downrelp = pathlib.Path(os.path.relpath(task_dir.parent, cwd))
+                downreli = re.sub("\.\./*", "⮯", str(downrelp))
+                downjdata = get_data(downtaskfile)
+                console.print(w.rtext(f"{downreli}./{downtaskfile.parent.name}: ", swatch="parentdir"), end="")
+                console.print(w.rtext(f"{len(downjdata)} tasks", swatch="parentdir.tasks"))
 
