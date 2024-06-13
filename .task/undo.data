@@ -411,3 +411,10 @@ time 1694182862
 old [description:"up\/down dirs: display summary of databases further up or down the current one." entry:"1693423835" modified:"1693423835" priority:"H" status:"pending" tags:"feat" tags_feat:"x" uuid:"03998ee8-9917-49cf-a6cb-3fdd14a7deb3"]
 new [description:"up\/down dirs: display summary of databases further up or down the current one." end:"1694182862" entry:"1693423835" modified:"1694182862" priority:"H" status:"completed" tags:"feat" tags_feat:"x" uuid:"03998ee8-9917-49cf-a6cb-3fdd14a7deb3"]
 ---
+time 1694182958
+new [description:"kanbash-like stats: display info on tasks in subdir if has project\/tag of the same name?" entry:"1694182958" modified:"1694182958" status:"pending" tags:"feat" tags_feat:"x" uuid:"8e4b441f-2ce8-4d81-a21a-262c62479b5f"]
+---
+time 1694182968
+old [description:"kanbash-like stats: display info on tasks in subdir if has project\/tag of the same name?" entry:"1694182958" modified:"1694182958" status:"pending" tags:"feat" tags_feat:"x" uuid:"8e4b441f-2ce8-4d81-a21a-262c62479b5f"]
+new [description:"kanbash-like stats: display info on tasks in subdir if has project\/tag of the same name?" entry:"1694182958" modified:"1694182968" priority:"L" status:"pending" tags:"feat" tags_feat:"x" uuid:"8e4b441f-2ce8-4d81-a21a-262c62479b5f"]
+---
