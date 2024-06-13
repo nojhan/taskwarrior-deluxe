@@ -7,6 +7,7 @@ import json
 import pytz
 import queue
 import pathlib
+import logging
 import textwrap
 import datetime
 import humanize
@@ -20,6 +21,7 @@ from rich.columns import Columns
 error_codes = {
     "NO_DATA_FILE": 100,
     "CANNOT_INIT": 200,
+    "NO_DATA": 300,
 }
 
 
@@ -517,7 +519,7 @@ def get_data(taskfile, filter = None):
     try:
         jdata = json.loads(out)
     except json.decoder.JSONDecodeError as exc:
-        print("ERROR:", exc.returncode, exc.output)
+        print("ERROR:", exc)
     else:
         return jdata
 
@@ -652,7 +654,7 @@ def upsearch(filename, at = pathlib.Path.cwd()):
 
     while current != root:
         found = current / filename
-        if found.exists():
+        if os.access(found, os.R_OK) and found.exists():
             return found
         current = current.parent
 
@@ -771,6 +773,9 @@ if __name__ == "__main__":
         jdata = get_data(taskfile, filter)
     else:
         jdata = get_data(taskfile, filter = None)
+        if not jdata:
+            error("NO_DATA", f"Failed to get data from taskfile {taskfile}")
+
         # If no explicit touch from an editing command,
         # then just point out tasks matching the filter.
         if not touched:
@@ -891,8 +896,11 @@ if __name__ == "__main__":
             uprelp = pathlib.Path(os.path.relpath(task_dir.parent, cwd))
             upreli = re.sub("\.\./*", "⮤", str(uprelp))
             upjdata = get_data(uptaskfile)
-            console.print(w.rtext(f"{upreli} {uptaskfile.parent.name}/: ", swatch="parentdir"), end="")
-            console.print(w.rtext(f"{len(upjdata)} tasks", swatch="parentdir.tasks"))
+            try:
+                console.print(w.rtext(f"{upreli} {uptaskfile.parent.name}/: ", swatch="parentdir"), end="")
+                console.print(w.rtext(f"{len(upjdata)} tasks", swatch="parentdir.tasks"))
+            except:
+                pass
 
         # Relative path to the directory holding the task files.
         rela = re.sub("\.\./*", "⮤", str(relp))
